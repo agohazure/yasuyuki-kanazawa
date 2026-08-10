@@ -212,7 +212,7 @@ h2 {
 	gap: 2rem;
 	padding-block: clamp(0.9rem, 1.4vw, 1.35rem);
 	border-bottom: 1px solid var(--line);
-	font-size: clamp(1.35rem, 2.25vw, 2.5rem);
+	font-size: clamp(1.05rem, 1.4vw, 1.55rem);
 	font-weight: 300;
 	letter-spacing: -0.04em;
 	line-height: 1;
