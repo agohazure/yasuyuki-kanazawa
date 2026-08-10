@@ -548,6 +548,12 @@ h2 {
 	object-fit: cover;
 }
 
+.work-gallery .work-figure--managed .work-figure__image {
+	height: auto;
+	aspect-ratio: auto;
+	object-fit: contain;
+}
+
 .work-figure--landscape .work-figure__image,
 .work-figure--landscape .work-figure__placeholder {
 	aspect-ratio: 3 / 2;

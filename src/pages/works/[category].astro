@@ -1,5 +1,6 @@
 ---
 import WorkFigure from '../../components/WorkFigure.astro';
+import ManagedGallery from '../../components/ManagedGallery.astro';
 import { categories, type WorkCategory } from '../../data/works';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
@@ -23,8 +24,9 @@ const { category } = Astro.props as { category: WorkCategory };
 			</ol>
 		</nav>
 
-		<div class="work-gallery">
+		<div class="work-gallery" data-managed-gallery={category.slug}>
 			{category.works.map((work, index) => <WorkFigure work={work} index={index + 1} priority={index === 0} />)}
 		</div>
 	</main>
+	<ManagedGallery />
 </BaseLayout>

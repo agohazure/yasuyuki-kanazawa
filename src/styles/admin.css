@@ -1,0 +1,397 @@
+.admin-body {
+	--admin-bg: #f4f4f0;
+	min-height: 100svh;
+	background: var(--admin-bg);
+}
+
+.admin-body button,
+.admin-body input {
+	font: inherit;
+}
+
+.admin-body button {
+	color: inherit;
+}
+
+.admin-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 4.5rem;
+	padding-inline: var(--gutter);
+	border-bottom: 1px solid var(--line);
+	background: var(--admin-bg);
+	font-size: 0.72rem;
+}
+
+.admin-header span {
+	color: var(--muted);
+}
+
+.admin-main {
+	width: min(100%, 100rem);
+	margin-inline: auto;
+	padding: clamp(2rem, 6vw, 6rem) var(--gutter) 8rem;
+}
+
+.admin-login {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: clamp(3rem, 10vw, 10rem);
+	align-items: end;
+	min-height: calc(100svh - 13rem);
+}
+
+.admin-login h1,
+.admin-toolbar h1 {
+	font-size: clamp(2.6rem, 7vw, 7rem);
+}
+
+.admin-kicker,
+.admin-index {
+	margin-bottom: 1rem;
+	color: var(--muted);
+	font-size: 0.65rem;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.admin-intro {
+	max-width: 28rem;
+	margin-top: 1.5rem;
+	color: var(--muted);
+	font-size: 0.82rem;
+}
+
+.admin-login__form {
+	display: grid;
+	gap: 0.8rem;
+	max-width: 28rem;
+}
+
+.admin-login__form label,
+.photo-field span,
+.tag-fieldset legend,
+.photo-card__tags legend {
+	color: var(--muted);
+	font-size: 0.66rem;
+	letter-spacing: 0.06em;
+}
+
+.admin-login__form input,
+.photo-field input {
+	width: 100%;
+	padding: 0.85rem 0;
+	border: 0;
+	border-bottom: 1px solid var(--ink);
+	border-radius: 0;
+	background: transparent;
+}
+
+.admin-login__form button,
+.admin-primary {
+	width: fit-content;
+	margin-top: 0.8rem;
+	padding: 0.8rem 1.15rem;
+	border: 1px solid var(--ink);
+	background: var(--ink);
+	color: var(--paper);
+	cursor: pointer;
+}
+
+.admin-status {
+	min-height: 1.4em;
+	color: var(--muted);
+	font-size: 0.72rem;
+}
+
+.admin-status.is-error {
+	color: #9a2d24;
+}
+
+.admin-toolbar,
+.library-heading {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 2rem;
+}
+
+.admin-toolbar {
+	padding-bottom: clamp(3rem, 7vw, 7rem);
+}
+
+.admin-toolbar__actions {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	font-size: 0.7rem;
+}
+
+.admin-toolbar__actions a {
+	padding-bottom: 0.15rem;
+	border-bottom: 1px solid currentColor;
+}
+
+.admin-toolbar__actions button {
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+}
+
+.upload-panel {
+	display: grid;
+	grid-template-columns: 1fr 3fr;
+	gap: 2rem;
+	padding-block: clamp(3rem, 6vw, 6rem);
+	border-top: 1px solid var(--ink);
+}
+
+.upload-panel h2,
+.library-panel h2 {
+	font-size: clamp(1.8rem, 3.5vw, 3.8rem);
+}
+
+.upload-form {
+	display: grid;
+	gap: 1.5rem;
+}
+
+.upload-drop {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 12rem;
+	padding: 2rem;
+	border: 1px dashed #a9a9a3;
+	background: rgba(255, 255, 255, 0.5);
+	cursor: pointer;
+}
+
+.upload-drop span {
+	font-size: 1rem;
+}
+
+.upload-drop small,
+.upload-selection,
+.library-help,
+.library-count {
+	color: var(--muted);
+	font-size: 0.7rem;
+}
+
+.tag-fieldset,
+.photo-card__tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.8rem 1.3rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.tag-fieldset legend,
+.photo-card__tags legend {
+	width: 100%;
+	margin-bottom: 0.6rem;
+}
+
+.tag-fieldset label,
+.photo-tag,
+.photo-visibility {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.72rem;
+	cursor: pointer;
+}
+
+.tag-fieldset input,
+.photo-tag input,
+.photo-visibility input {
+	accent-color: var(--ink);
+}
+
+.admin-primary:disabled {
+	opacity: 0.45;
+	cursor: wait;
+}
+
+.library-panel {
+	padding-top: clamp(3rem, 6vw, 6rem);
+	border-top: 1px solid var(--ink);
+}
+
+.library-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 2.5rem;
+}
+
+.library-filters button {
+	padding: 0.55rem 0.8rem;
+	border: 1px solid var(--line);
+	background: transparent;
+	font-size: 0.7rem;
+	cursor: pointer;
+}
+
+.library-filters button.is-active {
+	border-color: var(--ink);
+	background: var(--ink);
+	color: var(--paper);
+}
+
+.library-help {
+	margin-top: 1rem;
+}
+
+.photo-library {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	margin-top: 2rem;
+}
+
+.library-empty {
+	grid-column: 1 / -1;
+	padding-block: 5rem;
+	border-top: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+
+.photo-card {
+	display: grid;
+	grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1.2fr);
+	min-width: 0;
+	background: var(--paper);
+}
+
+.photo-card__media {
+	position: relative;
+	min-height: 16rem;
+	background: var(--field);
+}
+
+.photo-card__media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.photo-card__hidden {
+	position: absolute;
+	top: 0.75rem;
+	left: 0.75rem;
+	padding: 0.3rem 0.45rem;
+	background: var(--ink);
+	color: var(--paper);
+	font-size: 0.6rem;
+	text-transform: uppercase;
+}
+
+.photo-card__body {
+	display: grid;
+	align-content: start;
+	gap: 1.15rem;
+	padding: 1.25rem;
+}
+
+.photo-card__filename {
+	overflow: hidden;
+	color: var(--muted);
+	font-size: 0.63rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.photo-field {
+	display: grid;
+	gap: 0.25rem;
+}
+
+.photo-field input {
+	padding-block: 0.45rem;
+	border-bottom-color: var(--line);
+	font-size: 0.75rem;
+}
+
+.photo-card__tags {
+	gap: 0.55rem 0.8rem;
+}
+
+.photo-card__actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-top: 0.5rem;
+}
+
+.photo-card__actions button {
+	padding: 0.5rem 0.65rem;
+	border: 1px solid var(--line);
+	background: transparent;
+	font-size: 0.68rem;
+	cursor: pointer;
+}
+
+.photo-card__actions .photo-save {
+	border-color: var(--ink);
+	background: var(--ink);
+	color: var(--paper);
+}
+
+.photo-card__actions .photo-delete {
+	margin-left: auto;
+	border: 0;
+	color: #9a2d24;
+}
+
+.photo-card__actions button:disabled {
+	opacity: 0.25;
+	cursor: default;
+}
+
+@media (max-width: 70rem) {
+	.photo-library {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 48rem) {
+	.admin-login,
+	.upload-panel {
+		grid-template-columns: 1fr;
+	}
+
+	.admin-login {
+		align-content: center;
+		align-items: start;
+	}
+
+	.admin-toolbar,
+	.library-heading {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.upload-panel {
+		gap: 2.5rem;
+	}
+
+	.photo-card {
+		grid-template-columns: 1fr;
+	}
+
+	.photo-card__media {
+		min-height: 20rem;
+		max-height: 70svh;
+	}
+}

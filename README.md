@@ -11,22 +11,24 @@ Photography portfolio built with Astro and prepared for Cloudflare Pages.
 - `/about/`
 - `/contact/`
 
-## Add photographs
+## Photo manager
 
-1. Place optimized image files in `public/images/<category>/`.
-2. Open `src/data/works.ts`.
-3. Add an `image` path to the relevant work, for example:
+The private `/admin/` page uploads optimized photographs to Cloudflare R2. A photograph can have one or more of these tags:
 
-```ts
-{
-  title: 'Portrait 01',
-  alt: 'Description of the photograph',
-  image: '/images/portrait/portrait-01.webp',
-  aspect: 'portrait',
-}
-```
+- Portrait
+- Commercial
+- Landscape
+- Documentary
 
-Until an image path is supplied, the site shows a neutral archive placeholder rather than unrelated stock photography.
+The public galleries read the saved tags and per-category order immediately. The first published photograph in each category is also used in the four-image homepage gallery.
+
+Cloudflare Pages requires these production bindings:
+
+- R2 binding: `MEDIA_BUCKET`
+- Secret: `ADMIN_PASSWORD`
+- Secret: `SESSION_SECRET`
+
+Until managed photographs are uploaded, the site keeps the existing neutral archive placeholders.
 
 ## Development
 

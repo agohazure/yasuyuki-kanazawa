@@ -1,5 +1,6 @@
 ---
 import WorkFigure from '../components/WorkFigure.astro';
+import ManagedGallery from '../components/ManagedGallery.astro';
 import { categories } from '../data/works';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
@@ -9,7 +10,7 @@ const featuredWorks = categories.flatMap((category) => category.works.slice(0, 1
 <BaseLayout>
 	<main id="main-content">
 		<h1 class="visually-hidden">Yasuyuki Kanazawa</h1>
-		<section class="featured-gallery reveal" aria-label="Selected work">
+		<section class="featured-gallery reveal" aria-label="Selected work" data-managed-gallery="featured">
 			{featuredWorks.map((work, index) => <WorkFigure work={work} priority={index === 0} />)}
 		</section>
 
@@ -86,6 +87,7 @@ const featuredWorks = categories.flatMap((category) => category.works.slice(0, 1
 			</div>
 		</section>
 	</main>
+	<ManagedGallery />
 </BaseLayout>
 
 <script>
