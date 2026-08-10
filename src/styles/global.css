@@ -271,7 +271,6 @@ h2 {
 
 .home-about__body p {
 	max-width: 25ch;
-	margin-bottom: 1.5rem;
 	font-size: clamp(1.2rem, 2.2vw, 2.35rem);
 	font-weight: 300;
 	letter-spacing: -0.035em;
