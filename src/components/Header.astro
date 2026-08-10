@@ -3,8 +3,8 @@ const pathname = Astro.url.pathname;
 
 const links = [
 	{ href: '/#works', label: 'Works', active: pathname.startsWith('/works') },
-	{ href: '/about/', label: 'About', active: pathname.startsWith('/about') },
-	{ href: '/contact/', label: 'Contact', active: pathname.startsWith('/contact') },
+	{ href: '/#about', label: 'About', active: pathname.startsWith('/about') },
+	{ href: '/#contact', label: 'Contact', active: pathname.startsWith('/contact') },
 ];
 ---
 

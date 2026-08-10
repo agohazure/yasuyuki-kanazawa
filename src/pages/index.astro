@@ -1,14 +1,16 @@
 ---
 import WorkFigure from '../components/WorkFigure.astro';
-import { categories, featuredWork } from '../data/works';
+import { categories } from '../data/works';
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const featuredWorks = categories.flatMap((category) => category.works.slice(0, 1));
 ---
 
 <BaseLayout>
 	<main id="main-content">
 		<h1 class="visually-hidden">Yasuyuki Kanazawa</h1>
-		<section class="hero container reveal" aria-label="Featured work">
-			<WorkFigure work={featuredWork} priority />
+		<section class="featured-gallery container reveal" aria-label="Selected work">
+			{featuredWorks.map((work, index) => <WorkFigure work={work} priority={index === 0} />)}
 		</section>
 
 		<section id="works" class="section container" aria-labelledby="works-title">
@@ -27,7 +29,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 			</div>
 		</section>
 
-		<section class="home-about section container" aria-labelledby="about-title">
+		<section id="about" class="home-about section container" aria-labelledby="about-title">
 			<div class="section-heading">
 				<p class="index">02</p>
 				<h2 id="about-title">About</h2>
@@ -38,7 +40,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 			</div>
 		</section>
 
-		<section class="home-contact section container" aria-labelledby="contact-title">
+		<section id="contact" class="home-contact section container" aria-labelledby="contact-title">
 			<div class="section-heading">
 				<p class="index">03</p>
 				<h2 id="contact-title">Contact</h2>

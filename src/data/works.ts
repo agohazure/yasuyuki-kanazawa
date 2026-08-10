@@ -12,12 +12,6 @@ export type WorkCategory = {
 	works: WorkItem[];
 };
 
-export const featuredWork: WorkItem = {
-	title: 'Selected work',
-	alt: 'Selected photograph by Yasuyuki Kanazawa',
-	aspect: 'landscape',
-};
-
 export const categories: WorkCategory[] = [
 	{
 		slug: 'portrait',
