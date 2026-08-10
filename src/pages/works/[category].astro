@@ -14,14 +14,14 @@ const { category } = Astro.props as { category: WorkCategory };
 ---
 
 <BaseLayout title={category.title} description={`${category.description} Photography by Yasuyuki Kanazawa.`}>
-	<main id="main-content" class="page container reveal">
-		<header class="work-header">
-			<div>
-				<a class="back-link" href="/works/">Works</a>
-				<h1>{category.title}</h1>
-			</div>
-			<p>{category.description}</p>
-		</header>
+	<main id="main-content" class="work-page page container reveal">
+		<nav class="work-breadcrumb" aria-label="Breadcrumb">
+			<ol>
+				<li><a href="/works/">WORKS</a></li>
+				<li aria-hidden="true">/</li>
+				<li aria-current="page"><h1>{category.title}</h1></li>
+			</ol>
+		</nav>
 
 		<div class="work-gallery">
 			{category.works.map((work, index) => <WorkFigure work={work} index={index + 1} priority={index === 0} />)}
