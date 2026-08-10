@@ -40,8 +40,41 @@ const featuredWorks = categories.flatMap((category) => category.works.slice(0, 1
 					<a class="inline-link" href="https://www.instagram.com/maxillajp/" target="_blank" rel="noopener noreferrer">Maxilla</a>,
 					Tokyo, Japan.
 				</p>
+				<button class="profile-trigger" type="button" data-profile-open>View profile</button>
 			</div>
 		</section>
+
+		<dialog class="profile-dialog" data-profile-dialog aria-labelledby="profile-dialog-title">
+			<div class="profile-dialog__panel">
+				<button class="profile-dialog__close" type="button" data-profile-close aria-label="Close profile">Close</button>
+				<div class="profile-dialog__content">
+					<img
+						class="profile-dialog__image"
+						src="/images/yasuyuki-kanazawa-profile.jpg"
+						alt="Yasuyuki Kanazawa"
+						width="1080"
+						height="1080"
+					/>
+					<div class="profile-dialog__copy">
+						<p class="profile-dialog__label" id="profile-dialog-title">Profile</p>
+						<p>1986年 奈良県奈良市生まれ</p>
+						<p>
+							大阪芸術大学写真学科卒業後、フリーランスとして活動。<br />
+							2014年 フォトプロダクション、株式会社鬼を設立。<br />
+							2025年 株式会社Helixes 入社、プロデューサーとして<br />
+							活動しつつ、写真家稼業でも精力的に活動中。
+						</p>
+						<div class="profile-dialog__awards">
+							<h3>Awards</h3>
+							<p>
+								第73回日経広告賞【食品・医薬日用品部門】最優秀賞<br />
+								その他受賞歴多数
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</dialog>
 
 		<section id="contact" class="home-contact section container" aria-labelledby="contact-title">
 			<div class="section-heading">
@@ -54,3 +87,15 @@ const featuredWorks = categories.flatMap((category) => category.works.slice(0, 1
 		</section>
 	</main>
 </BaseLayout>
+
+<script>
+	const profileDialog = document.querySelector<HTMLDialogElement>('[data-profile-dialog]');
+	const profileOpen = document.querySelector<HTMLButtonElement>('[data-profile-open]');
+	const profileClose = document.querySelector<HTMLButtonElement>('[data-profile-close]');
+
+	profileOpen?.addEventListener('click', () => profileDialog?.showModal());
+	profileClose?.addEventListener('click', () => profileDialog?.close());
+	profileDialog?.addEventListener('click', (event) => {
+		if (event.target === profileDialog) profileDialog.close();
+	});
+</script>

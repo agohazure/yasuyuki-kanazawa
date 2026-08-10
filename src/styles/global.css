@@ -277,6 +277,116 @@ h2 {
 	line-height: 1.15;
 }
 
+.profile-trigger {
+	margin-top: 1.5rem;
+	padding: 0 0 0.2rem;
+	border: 0;
+	border-bottom: 1px solid currentColor;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: 0.72rem;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+.profile-trigger:focus-visible,
+.profile-dialog__close:focus-visible {
+	outline: 1px solid var(--ink);
+	outline-offset: 0.35rem;
+}
+
+.profile-dialog {
+	width: min(calc(100% - 2rem), 46rem);
+	max-height: calc(100svh - 2rem);
+	margin: auto;
+	padding: 0;
+	border: 0;
+	background: var(--paper);
+	color: var(--ink);
+	box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.2);
+}
+
+.profile-dialog::backdrop {
+	background: rgba(17, 17, 17, 0.55);
+	backdrop-filter: blur(0.2rem);
+}
+
+.profile-dialog__panel {
+	position: relative;
+	max-height: calc(100svh - 2rem);
+	padding: clamp(1.5rem, 4vw, 3rem);
+	overflow-y: auto;
+}
+
+.profile-dialog__close {
+	position: absolute;
+	top: 1.25rem;
+	right: 1.25rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font: inherit;
+	font-size: 0.66rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.profile-dialog__content {
+	display: grid;
+	grid-template-columns: 5rem 1fr;
+	align-items: start;
+	gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.profile-dialog__image {
+	display: block;
+	width: 5rem;
+	height: auto;
+	aspect-ratio: 1;
+	object-fit: cover;
+}
+
+.profile-dialog__label {
+	margin-bottom: 2rem;
+	color: var(--muted);
+	font-size: 0.66rem;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.profile-dialog__copy > p:not(.profile-dialog__label) {
+	font-size: 0.82rem;
+	letter-spacing: 0;
+	line-height: 1.9;
+}
+
+.profile-dialog__copy > p + p {
+	margin-top: 1.5rem;
+}
+
+.profile-dialog__awards {
+	margin-top: 2.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--line);
+}
+
+.profile-dialog__awards h3 {
+	margin: 0 0 1rem;
+	font-size: 0.7rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+}
+
+.profile-dialog__awards p {
+	font-size: 0.8rem;
+	line-height: 1.8;
+}
+
 .text-link {
 	display: inline-block;
 	padding-bottom: 0.2rem;
@@ -607,6 +717,15 @@ h2 {
 
 	.home-about__body p {
 		font-size: clamp(1.2rem, 6vw, 1.8rem);
+	}
+
+	.profile-dialog__content {
+		grid-template-columns: 1fr;
+		gap: 1.5rem;
+	}
+
+	.profile-dialog__image {
+		width: 4.5rem;
 	}
 
 	.works-grid {
