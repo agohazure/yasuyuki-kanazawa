@@ -1,0 +1,27 @@
+---
+import { categories } from '../../data/works';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Works">
+	<main id="main-content" class="page container reveal">
+		<header class="page-header">
+			<p class="eyebrow">Selected photography</p>
+			<h1>Works</h1>
+		</header>
+
+		<div class="works-grid">
+			{categories.map((category, index) => (
+				<a class="work-card" href={`/works/${category.slug}/`}>
+					<div class:list={['work-card__field', `work-card__field--${index + 1}`]} aria-hidden="true">
+						<span>0{index + 1}</span>
+					</div>
+					<div class="work-card__copy">
+						<h2>{category.title}</h2>
+						<p>{category.description}</p>
+					</div>
+				</a>
+			))}
+		</div>
+	</main>
+</BaseLayout>

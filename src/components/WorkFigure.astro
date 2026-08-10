@@ -1,0 +1,30 @@
+---
+import type { WorkItem } from '../data/works';
+
+interface Props {
+	work: WorkItem;
+	index?: number;
+	priority?: boolean;
+}
+
+const { work, index, priority = false } = Astro.props;
+---
+
+<figure class:list={['work-figure', `work-figure--${work.aspect}`]}>
+	{work.image ? (
+		<img
+			class="work-figure__image"
+			src={work.image}
+			alt={work.alt}
+			loading={priority ? 'eager' : 'lazy'}
+			fetchpriority={priority ? 'high' : 'auto'}
+			decoding="async"
+		/>
+	) : (
+		<div class="work-figure__placeholder" role="img" aria-label={`${work.alt}. Image archive in preparation.`}>
+			<span class="work-figure__placeholder-index">{index ? String(index).padStart(2, '0') : 'YK'}</span>
+			<span>Image archive in preparation</span>
+		</div>
+	)}
+	<figcaption>{work.title}</figcaption>
+</figure>

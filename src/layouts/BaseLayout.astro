@@ -1,0 +1,45 @@
+---
+import Header from '../components/Header.astro';
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = 'Photography portfolio of Yasuyuki Kanazawa. Portrait, commercial, landscape, and documentary work.',
+} = Astro.props;
+
+const pageTitle = title ? `${title} | Yasuyuki Kanazawa` : 'Yasuyuki Kanazawa';
+const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.url;
+const socialImageURL = Astro.site ? new URL('/og.png', Astro.site) : new URL('/og.png', Astro.url);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#ffffff" />
+		<link rel="canonical" href={canonicalURL} />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL} />
+		<meta property="og:site_name" content="Yasuyuki Kanazawa" />
+		<meta property="og:image" content={socialImageURL} />
+		<meta property="og:image:alt" content="Yasuyuki Kanazawa" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content={socialImageURL} />
+		<title>{pageTitle}</title>
+	</head>
+	<body>
+		<a class="skip-link" href="#main-content">Skip to content</a>
+		<Header />
+		<slot />
+	</body>
+</html>

@@ -1,0 +1,55 @@
+---
+import WorkFigure from '../components/WorkFigure.astro';
+import { categories, featuredWork } from '../data/works';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout>
+	<main id="main-content">
+		<section class="hero container reveal" aria-labelledby="hero-title">
+			<div class="hero__intro">
+				<p class="eyebrow">Photographer based in Japan</p>
+				<h1 id="hero-title">Yasuyuki<br />Kanazawa</h1>
+			</div>
+
+			<WorkFigure work={featuredWork} priority />
+		</section>
+
+		<section class="section container" aria-labelledby="works-title">
+			<div class="section-heading">
+				<p class="index">01</p>
+				<h2 id="works-title">Works</h2>
+			</div>
+
+			<div class="category-list">
+				{categories.map((category, index) => (
+					<a class="category-link" href={`/works/${category.slug}/`}>
+						<span>{category.title}</span>
+						<span class="category-link__meta">0{index + 1}</span>
+					</a>
+				))}
+			</div>
+		</section>
+
+		<section class="home-about section container" aria-labelledby="about-title">
+			<div class="section-heading">
+				<p class="index">02</p>
+				<h2 id="about-title">About</h2>
+			</div>
+			<div class="home-about__body">
+				<p>Yasuyuki Kanazawa is a photographer based in Japan.</p>
+				<a class="text-link" href="/about/">View profile</a>
+			</div>
+		</section>
+
+		<section class="home-contact section container" aria-labelledby="contact-title">
+			<div class="section-heading">
+				<p class="index">03</p>
+				<h2 id="contact-title">Contact</h2>
+			</div>
+			<div class="home-contact__body">
+				<a class="contact-email" href="mailto:info@demon-pictures.net">info@demon-pictures.net</a>
+			</div>
+		</section>
+	</main>
+</BaseLayout>
