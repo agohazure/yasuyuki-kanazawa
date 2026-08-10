@@ -185,6 +185,10 @@ h2 {
 	border-top: 1px solid var(--line);
 }
 
+#works {
+	scroll-margin-top: var(--header-height);
+}
+
 .section-heading {
 	display: grid;
 	grid-template-columns: minmax(6rem, 1fr) 3fr;
