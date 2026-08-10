@@ -284,6 +284,11 @@ h2 {
 	border-bottom: 1px solid currentColor;
 }
 
+.inline-link {
+	padding-bottom: 0.05em;
+	border-bottom: 1px solid currentColor;
+}
+
 .contact-email {
 	font-size: clamp(1.15rem, 2.35vw, 2.6rem);
 	font-weight: 300;
