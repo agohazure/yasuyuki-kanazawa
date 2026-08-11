@@ -25,6 +25,102 @@
 			.sort((left, right) => (left.positions[tag] ?? Number.MAX_SAFE_INTEGER) - (right.positions[tag] ?? Number.MAX_SAFE_INTEGER));
 	}
 
+	function connectSwipeTrack(track: HTMLElement, slides: HTMLElement[], counter?: HTMLElement) {
+		let current = 0;
+		let scrollFrame = 0;
+
+		const updateCounter = () => {
+			if (counter) counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+		};
+
+		const nearestSlide = () => {
+			const center = track.scrollLeft + track.clientWidth / 2;
+			let nearest = 0;
+			let distance = Number.POSITIVE_INFINITY;
+			slides.forEach((slide, index) => {
+				const nextDistance = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - center);
+				if (nextDistance < distance) {
+					distance = nextDistance;
+					nearest = index;
+				}
+			});
+			return nearest;
+		};
+
+		const scrollToSlide = (index: number, behavior: ScrollBehavior = 'smooth') => {
+			current = Math.max(0, Math.min(index, slides.length - 1));
+			const slide = slides[current];
+			track.scrollTo({
+				left: slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2,
+				behavior,
+			});
+			updateCounter();
+		};
+
+		track.addEventListener('scroll', () => {
+			cancelAnimationFrame(scrollFrame);
+			scrollFrame = requestAnimationFrame(() => {
+				current = nearestSlide();
+				updateCounter();
+			});
+		}, { passive: true });
+
+		track.addEventListener('keydown', (event) => {
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				scrollToSlide(current - 1);
+			}
+			if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				scrollToSlide(current + 1);
+			}
+		});
+
+		if (slides.length > 1) {
+			let dragStartX = 0;
+			let dragStartScroll = 0;
+
+			track.addEventListener('pointerdown', (event) => {
+				if (event.pointerType !== 'mouse' || event.button !== 0) return;
+				dragStartX = event.clientX;
+				dragStartScroll = track.scrollLeft;
+				track.classList.add('is-dragging');
+				track.setPointerCapture(event.pointerId);
+			});
+
+			track.addEventListener('pointermove', (event) => {
+				if (!track.classList.contains('is-dragging')) return;
+				track.scrollLeft = dragStartScroll - (event.clientX - dragStartX);
+			});
+
+			const finishDrag = (event: PointerEvent) => {
+				if (!track.classList.contains('is-dragging')) return;
+				track.classList.remove('is-dragging');
+				if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+				scrollToSlide(nearestSlide());
+			};
+			track.addEventListener('pointerup', finishDrag);
+			track.addEventListener('pointercancel', finishDrag);
+		}
+
+		let previousWidth = 0;
+		const fitTrackEnds = () => {
+			const width = track.getBoundingClientRect().width;
+			if (width === 0 || width === previousWidth) return;
+			previousWidth = width;
+			track.style.paddingInline = '0px';
+			if (slides.length > 1) {
+				track.style.paddingLeft = `${Math.max(0, (width - slides[0].getBoundingClientRect().width) / 2)}px`;
+				track.style.paddingRight = `${Math.max(0, (width - slides.at(-1)!.getBoundingClientRect().width) / 2)}px`;
+			}
+			requestAnimationFrame(() => scrollToSlide(current, 'auto'));
+		};
+
+		requestAnimationFrame(fitTrackEnds);
+		new ResizeObserver(fitTrackEnds).observe(track);
+		updateCounter();
+	}
+
 	function makePreviewSeries(gallery: HTMLElement, tag: Tag) {
 		const figures = [...gallery.querySelectorAll<HTMLElement>(':scope > .work-figure')];
 		const slides = figures
@@ -50,46 +146,21 @@
 		stage.setAttribute('role', 'group');
 		stage.setAttribute('aria-label', `${label}, ${slides.length} photograph preview`);
 
-		const frame = document.createElement('div');
-		frame.className = 'work-series__fallback-frame';
-		stage.append(frame);
+		const track = document.createElement('div');
+		track.className = 'work-series__track';
+		track.tabIndex = 0;
+		const swipeSlides = slides.map((content) => {
+			const slide = document.createElement('div');
+			slide.className = 'work-series__slide work-series__slide--fallback';
+			slide.style.aspectRatio = ratio;
+			slide.append(content);
+			return slide;
+		});
+		track.append(...swipeSlides);
+		stage.append(track);
 
-		let current = 0;
 		const counter = document.createElement('span');
 		counter.className = 'work-series__counter';
-		const show = (next: number) => {
-			current = (next + slides.length) % slides.length;
-			frame.classList.remove('is-changing');
-			void frame.offsetWidth;
-			frame.replaceChildren(slides[current].cloneNode(true));
-			frame.classList.add('is-changing');
-			counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
-		};
-
-		const previous = document.createElement('button');
-		previous.className = 'work-series__edge work-series__edge--previous';
-		previous.type = 'button';
-		previous.setAttribute('aria-label', `Previous ${label.toLowerCase()} photograph`);
-		previous.textContent = '←';
-		previous.addEventListener('click', () => show(current - 1));
-
-		const next = document.createElement('button');
-		next.className = 'work-series__edge work-series__edge--next';
-		next.type = 'button';
-		next.setAttribute('aria-label', `Next ${label.toLowerCase()} photograph`);
-		next.textContent = '→';
-		next.addEventListener('click', () => show(current + 1));
-		stage.addEventListener('keydown', (event) => {
-			if (event.key === 'ArrowLeft') {
-				event.preventDefault();
-				show(current - 1);
-			}
-			if (event.key === 'ArrowRight') {
-				event.preventDefault();
-				show(current + 1);
-			}
-		});
-		stage.append(previous, next);
 
 		const meta = document.createElement('figcaption');
 		meta.className = 'work-series__meta';
@@ -97,7 +168,7 @@
 		title.textContent = `${label} Preview series`;
 		meta.append(title, counter);
 		figure.append(stage, meta);
-		show(0);
+		connectSwipeTrack(track, swipeSlides, counter);
 		gallery.replaceChildren(figure);
 	}
 
@@ -109,67 +180,36 @@
 
 		const stage = document.createElement('div');
 		stage.className = 'work-series__stage';
-		stage.tabIndex = 0;
 		stage.setAttribute('role', 'group');
 		stage.setAttribute('aria-label', `${series.title}, ${series.photos.length} photographs`);
-		if (!featured) stage.style.aspectRatio = `${cover.width} / ${cover.height}`;
 
-		const image = document.createElement('img');
-		image.className = 'work-series__image';
-		image.src = cover.image;
-		image.alt = cover.alt;
-		image.width = cover.width;
-		image.height = cover.height;
-		image.loading = priority ? 'eager' : 'lazy';
-		image.decoding = 'async';
-		if (priority) image.setAttribute('fetchpriority', 'high');
-		stage.append(image);
+		const track = document.createElement('div');
+		track.className = `work-series__track${series.photos.length === 1 ? ' work-series__track--single' : ''}`;
+		track.tabIndex = 0;
+		track.setAttribute('aria-label', `Swipe through ${series.title}`);
+		const slides = series.photos.map((photo, index) => {
+			const slide = document.createElement('div');
+			slide.className = 'work-series__slide';
+			slide.style.aspectRatio = `${photo.width} / ${photo.height}`;
 
-		let current = 0;
-		const counter = document.createElement('span');
-		counter.className = 'work-series__counter';
-
-		const show = (next: number) => {
-			current = (next + series.photos.length) % series.photos.length;
-			const photo = series.photos[current];
-			image.classList.remove('is-changing');
-			void image.offsetWidth;
+			const image = document.createElement('img');
+			image.className = 'work-series__image';
 			image.src = photo.image;
 			image.alt = photo.alt;
 			image.width = photo.width;
 			image.height = photo.height;
-			image.classList.add('is-changing');
-			counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(series.photos.length).padStart(2, '0')}`;
-			const upcoming = series.photos[(current + 1) % series.photos.length];
-			if (upcoming && upcoming.id !== photo.id) new Image().src = upcoming.image;
-		};
+			image.loading = priority && index === 0 ? 'eager' : 'lazy';
+			image.decoding = 'async';
+			image.draggable = false;
+			if (priority && index === 0) image.setAttribute('fetchpriority', 'high');
+			slide.append(image);
+			return slide;
+		});
+		track.append(...slides);
+		stage.append(track);
 
-		if (series.photos.length > 1) {
-			const previous = document.createElement('button');
-			previous.className = 'work-series__edge work-series__edge--previous';
-			previous.type = 'button';
-			previous.setAttribute('aria-label', `Previous photograph in ${series.title}`);
-			previous.textContent = '←';
-			previous.addEventListener('click', () => show(current - 1));
-
-			const next = document.createElement('button');
-			next.className = 'work-series__edge work-series__edge--next';
-			next.type = 'button';
-			next.setAttribute('aria-label', `Next photograph in ${series.title}`);
-			next.textContent = '→';
-			next.addEventListener('click', () => show(current + 1));
-			stage.addEventListener('keydown', (event) => {
-				if (event.key === 'ArrowLeft') {
-					event.preventDefault();
-					show(current - 1);
-				}
-				if (event.key === 'ArrowRight') {
-					event.preventDefault();
-					show(current + 1);
-				}
-			});
-			stage.append(previous, next);
-		}
+		const counter = document.createElement('span');
+		counter.className = 'work-series__counter';
 
 		const meta = document.createElement('figcaption');
 		meta.className = 'work-series__meta';
@@ -178,7 +218,7 @@
 		meta.append(title);
 		if (series.photos.length > 1) meta.append(counter);
 		figure.append(stage, meta);
-		show(0);
+		connectSwipeTrack(track, slides, series.photos.length > 1 ? counter : undefined);
 		return figure;
 	}
 
