@@ -103,12 +103,15 @@
 			track.addEventListener('pointercancel', finishDrag);
 		}
 
-		let previousWidth = 0;
+		let previousSignature = '';
 		const fitTrackEnds = () => {
 			const host = (track.parentElement ?? track) as HTMLElement;
-			const width = host.getBoundingClientRect().width;
-			if (width === 0 || width === previousWidth) return;
-			previousWidth = width;
+			const rect = host.getBoundingClientRect();
+			const width = rect.width;
+			if (width === 0) return;
+			const signature = `${Math.round(width)}x${Math.round(rect.height)}`;
+			if (signature === previousSignature) return;
+			previousSignature = signature;
 			if (slides.length > 1) {
 				track.style.paddingLeft = `${Math.max(0, (width - slides[0].getBoundingClientRect().width) / 2)}px`;
 				track.style.paddingRight = `${Math.max(0, (width - slides.at(-1)!.getBoundingClientRect().width) / 2)}px`;
