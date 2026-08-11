@@ -577,6 +577,16 @@ h2 {
 	aspect-ratio: 1;
 }
 
+.featured-gallery .work-figure {
+	min-width: 0;
+}
+
+.featured-gallery .work-figure__image,
+.featured-gallery .work-figure__placeholder {
+	max-width: 100%;
+	aspect-ratio: auto;
+}
+
 .work-figure__placeholder {
 	position: relative;
 	display: flex;
