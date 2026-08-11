@@ -866,7 +866,7 @@ h2 {
 	}
 
 	.wordmark {
-		width: 5.5rem;
+		width: auto;
 		max-width: none;
 		line-height: 1;
 	}
@@ -878,14 +878,21 @@ h2 {
 	.wordmark__mobile {
 		display: grid;
 		gap: 0.18rem;
-		width: 100%;
+		width: max-content;
 	}
 
 	.wordmark__line {
+		width: 100%;
+	}
+
+	.wordmark__line--expanded {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		width: 100%;
+	}
+
+	.wordmark__line--natural {
+		white-space: nowrap;
 	}
 }
 
