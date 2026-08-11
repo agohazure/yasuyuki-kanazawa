@@ -7,7 +7,9 @@ export async function onRequestGet({ request, env, params }) {
 	const manifest = await readManifest(env.MEDIA_BUCKET);
 	const photo = manifest.photos.find((item) => item.id === params.id);
 	if (!photo) return new Response('Not found', { status: 404 });
-	if (!photo.published && !(await isAuthenticated(request, env))) return new Response('Not found', { status: 404 });
+	const series = manifest.series.find((item) => item.id === photo.seriesId);
+	const isPublic = photo.published && series?.published !== false;
+	if (!isPublic && !(await isAuthenticated(request, env))) return new Response('Not found', { status: 404 });
 
 	const object = await env.MEDIA_BUCKET.get(photo.key);
 	if (!object) return new Response('Not found', { status: 404 });
@@ -17,6 +19,6 @@ export async function onRequestGet({ request, env, params }) {
 	headers.set('content-type', photo.contentType);
 	headers.set('etag', object.httpEtag);
 	headers.set('x-content-type-options', 'nosniff');
-	headers.set('cache-control', photo.published ? 'public, max-age=86400' : 'private, no-store');
+	headers.set('cache-control', isPublic ? 'public, max-age=86400' : 'private, no-store');
 	return new Response(object.body, { headers });
 }

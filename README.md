@@ -13,14 +13,14 @@ Photography portfolio built with Astro and prepared for Cloudflare Pages.
 
 ## Photo manager
 
-The private `/admin/` page uploads optimized photographs to Cloudflare R2. A photograph can have one or more of these tags:
+The private `/admin/` page uploads optimized photographs to Cloudflare R2. Photographs are organized into series representing one project or theme. A series can have one or more of these tags:
 
 - Portrait
 - Commercial
 - Landscape
 - Documentary
 
-The public galleries read the saved tags and per-category order immediately. The first published photograph in each category is also used in the four-image homepage gallery.
+The public galleries display each series as one block. Visitors move through its photographs with the left and right image edges. The manager can create series, add photographs to an existing series, move an uploaded photograph between series, edit tags, reorder photographs inside a series, and reorder series per category. The first published series in each category is also used in the four-image homepage gallery.
 
 Cloudflare Pages requires these production bindings:
 

@@ -17,15 +17,15 @@ export async function onRequestPost({ request, env }) {
 
 	if (!isTag(body.tag) || !Array.isArray(body.ids)) return json({ error: 'Invalid order.' }, 400);
 	const manifest = await readManifest(env.MEDIA_BUCKET);
-	const photos = manifest.photos.filter((photo) => photo.tags.includes(body.tag));
-	const validIds = new Set(photos.map((photo) => photo.id));
+	const series = manifest.series.filter((item) => item.tags.includes(body.tag));
+	const validIds = new Set(series.map((item) => item.id));
 	const orderedIds = [...new Set(body.ids.map(String).filter((id) => validIds.has(id)))];
-	for (const photo of photos) {
-		if (!orderedIds.includes(photo.id)) orderedIds.push(photo.id);
+	for (const item of series) {
+		if (!orderedIds.includes(item.id)) orderedIds.push(item.id);
 	}
 	orderedIds.forEach((id, index) => {
-		const photo = manifest.photos.find((item) => item.id === id);
-		if (photo) photo.positions[body.tag] = index;
+		const item = manifest.series.find((candidate) => candidate.id === id);
+		if (item) item.positions[body.tag] = index;
 	});
 
 	await writeManifest(env.MEDIA_BUCKET, manifest);

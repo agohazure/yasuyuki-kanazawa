@@ -23,7 +23,7 @@ import '../../styles/admin.css';
 				<div>
 					<p class="admin-kicker">Private access</p>
 					<h1>Photo Manager</h1>
-					<p class="admin-intro">写真の追加、カテゴリー設定、掲載順の変更ができます。</p>
+					<p class="admin-intro">写真を案件・テーマごとのシリーズとして管理できます。</p>
 				</div>
 				<form class="admin-login__form" data-login-form>
 					<label for="admin-password">Password</label>
@@ -37,7 +37,7 @@ import '../../styles/admin.css';
 				<div class="admin-toolbar">
 					<div>
 						<p class="admin-kicker">Portfolio library</p>
-						<h1>Photographs</h1>
+						<h1>Series</h1>
 					</div>
 					<div class="admin-toolbar__actions">
 						<a href="/" target="_blank" rel="noopener noreferrer">View site</a>
@@ -51,6 +51,31 @@ import '../../styles/admin.css';
 						<h2 id="upload-title">Upload</h2>
 					</div>
 					<form class="upload-form" data-upload-form>
+						<p class="upload-explanation">選択した写真を、1つの案件・テーマのブロックとして公開します。写真の選択順がシリーズ内の順番になります。</p>
+
+						<label class="admin-field" for="series-target">
+							<span>Series / project</span>
+							<select id="series-target" name="seriesTarget">
+								<option value="new">新しいシリーズを作る</option>
+							</select>
+						</label>
+
+						<div class="new-series-fields" data-new-series-fields>
+							<label class="admin-field" for="series-title">
+								<span>案件名・テーマ名</span>
+								<input id="series-title" name="seriesTitle" type="text" maxlength="120" placeholder="例：Tokyo Portraits" />
+							</label>
+
+							<fieldset class="tag-fieldset" data-upload-tags>
+								<legend>Category tags</legend>
+								<label><input type="checkbox" name="upload-tag" value="portrait" /> Portrait</label>
+								<label><input type="checkbox" name="upload-tag" value="commercial" /> Commercial</label>
+								<label><input type="checkbox" name="upload-tag" value="landscape" /> Landscape</label>
+								<label><input type="checkbox" name="upload-tag" value="documentary" /> Documentary</label>
+							</fieldset>
+						</div>
+						<p class="upload-selection" data-series-note></p>
+
 						<label class="upload-drop" for="photo-files">
 							<span>Select photographs</span>
 							<small>JPEG / PNG / WebP / AVIF · 複数選択可</small>
@@ -58,15 +83,7 @@ import '../../styles/admin.css';
 						<input id="photo-files" class="visually-hidden" name="files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple required />
 						<p class="upload-selection" data-file-selection>写真を選択してください</p>
 
-						<fieldset class="tag-fieldset">
-							<legend>Category tags</legend>
-							<label><input type="checkbox" name="upload-tag" value="portrait" /> Portrait</label>
-							<label><input type="checkbox" name="upload-tag" value="commercial" /> Commercial</label>
-							<label><input type="checkbox" name="upload-tag" value="landscape" /> Landscape</label>
-							<label><input type="checkbox" name="upload-tag" value="documentary" /> Documentary</label>
-						</fieldset>
-
-						<button class="admin-primary" type="submit">Upload &amp; publish</button>
+						<button class="admin-primary" type="submit">Create series &amp; publish</button>
 						<p class="admin-status" data-upload-status aria-live="polite"></p>
 					</form>
 				</section>
@@ -80,16 +97,16 @@ import '../../styles/admin.css';
 						<p class="library-count" data-library-count></p>
 					</div>
 
-					<div class="library-filters" role="group" aria-label="Filter photographs">
+					<div class="library-filters" role="group" aria-label="Filter series">
 						<button type="button" class="is-active" data-filter="all">All</button>
 						<button type="button" data-filter="portrait">Portrait</button>
 						<button type="button" data-filter="commercial">Commercial</button>
 						<button type="button" data-filter="landscape">Landscape</button>
 						<button type="button" data-filter="documentary">Documentary</button>
 					</div>
-					<p class="library-help" data-library-help>カテゴリーを選ぶと、矢印で掲載順を変更できます。</p>
+					<p class="library-help">写真の← →でシリーズ内の順番を変更。カテゴリーを選ぶと、シリーズ自体の掲載順も変更できます。</p>
 					<p class="admin-status" data-library-status aria-live="polite"></p>
-					<div class="photo-library" data-photo-library></div>
+					<div class="series-library" data-series-library></div>
 				</section>
 			</section>
 		</main>
@@ -98,6 +115,8 @@ import '../../styles/admin.css';
 			type Tag = 'portrait' | 'commercial' | 'landscape' | 'documentary';
 			type AdminPhoto = {
 				id: string;
+				seriesId: string;
+				sequence: number;
 				filename: string;
 				title: string;
 				alt: string;
@@ -106,8 +125,15 @@ import '../../styles/admin.css';
 				height: number;
 				aspect: 'portrait' | 'landscape' | 'square';
 				published: boolean;
+				createdAt: string;
+			};
+			type AdminSeries = {
+				id: string;
+				title: string;
+				published: boolean;
 				tags: Tag[];
 				positions: Partial<Record<Tag, number>>;
+				photoIds: string[];
 				createdAt: string;
 			};
 
@@ -118,18 +144,23 @@ import '../../styles/admin.css';
 				landscape: 'Landscape',
 				documentary: 'Documentary',
 			};
-			const state: { photos: AdminPhoto[]; filter: 'all' | Tag } = { photos: [], filter: 'all' };
+			const state: { photos: AdminPhoto[]; series: AdminSeries[]; filter: 'all' | Tag } = { photos: [], series: [], filter: 'all' };
 
 			const loginPanel = document.querySelector<HTMLElement>('[data-login-panel]')!;
 			const workspace = document.querySelector<HTMLElement>('[data-workspace]')!;
 			const loginForm = document.querySelector<HTMLFormElement>('[data-login-form]')!;
 			const loginStatus = document.querySelector<HTMLElement>('[data-login-status]')!;
 			const uploadForm = document.querySelector<HTMLFormElement>('[data-upload-form]')!;
+			const seriesTarget = document.querySelector<HTMLSelectElement>('#series-target')!;
+			const seriesTitle = document.querySelector<HTMLInputElement>('#series-title')!;
+			const newSeriesFields = document.querySelector<HTMLElement>('[data-new-series-fields]')!;
+			const uploadTags = document.querySelector<HTMLFieldSetElement>('[data-upload-tags]')!;
+			const seriesNote = document.querySelector<HTMLElement>('[data-series-note]')!;
 			const fileInput = document.querySelector<HTMLInputElement>('#photo-files')!;
 			const fileSelection = document.querySelector<HTMLElement>('[data-file-selection]')!;
 			const uploadStatus = document.querySelector<HTMLElement>('[data-upload-status]')!;
 			const libraryStatus = document.querySelector<HTMLElement>('[data-library-status]')!;
-			const library = document.querySelector<HTMLElement>('[data-photo-library]')!;
+			const library = document.querySelector<HTMLElement>('[data-series-library]')!;
 			const libraryCount = document.querySelector<HTMLElement>('[data-library-count]')!;
 
 			function setStatus(target: HTMLElement, message = '', error = false) {
@@ -161,79 +192,144 @@ import '../../styles/admin.css';
 				return node;
 			}
 
-			function visiblePhotos() {
-				if (state.filter === 'all') {
-					return [...state.photos].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-				}
-				return state.photos
-					.filter((photo) => photo.tags.includes(state.filter as Tag))
-					.sort(
-						(left, right) =>
-							(left.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER) -
-							(right.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER),
-					);
+			function photosForSeries(series: AdminSeries) {
+				const byId = new Map(state.photos.map((photo) => [photo.id, photo]));
+				return series.photoIds.map((id) => byId.get(id)).filter((photo): photo is AdminPhoto => Boolean(photo));
 			}
 
-			function makeTagCheckbox(photo: AdminPhoto, tag: Tag) {
+			function visibleSeries() {
+				if (state.filter === 'all') return [...state.series].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+				return state.series
+					.filter((item) => item.tags.includes(state.filter as Tag))
+					.sort((left, right) => (left.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER) - (right.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER));
+			}
+
+			function makeTagCheckbox(series: AdminSeries, tag: Tag) {
 				const label = element('label', 'photo-tag');
 				const input = document.createElement('input');
 				input.type = 'checkbox';
 				input.value = tag;
-				input.checked = photo.tags.includes(tag);
+				input.checked = series.tags.includes(tag);
 				input.dataset.cardTag = tag;
 				label.append(input, document.createTextNode(tagLabels[tag]));
 				return label;
 			}
 
-			function makeLabeledInput(labelText: string, value: string, field: 'title' | 'alt') {
-				const label = element('label', 'photo-field');
-				label.append(element('span', '', labelText));
-				const input = document.createElement('input');
-				input.type = 'text';
-				input.value = value;
-				input.dataset.field = field;
-				input.maxLength = field === 'title' ? 120 : 240;
-				label.append(input);
-				return label;
+			function syncUploadMode() {
+				const isNew = seriesTarget.value === 'new';
+				newSeriesFields.hidden = !isNew;
+				seriesTitle.disabled = !isNew;
+				uploadTags.disabled = !isNew;
+				const selected = state.series.find((item) => item.id === seriesTarget.value);
+				seriesNote.textContent = selected ? `追加先：${selected.title} · ${selected.tags.map((tag) => tagLabels[tag]).join(' / ')}` : '';
+				uploadForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.textContent = isNew ? 'Create series & publish' : 'Add photographs';
+			}
+
+			function renderSeriesOptions(preferred?: string) {
+				const current = preferred || seriesTarget.value;
+				const first = document.createElement('option');
+				first.value = 'new';
+				first.textContent = '新しいシリーズを作る';
+				seriesTarget.replaceChildren(first);
+				[...state.series]
+					.sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+					.forEach((item) => {
+						const option = document.createElement('option');
+						option.value = item.id;
+						option.textContent = item.title;
+						seriesTarget.append(option);
+					});
+				seriesTarget.value = state.series.some((item) => item.id === current) ? current : 'new';
+				syncUploadMode();
 			}
 
 			function renderLibrary() {
-				const photos = visiblePhotos();
+				const items = visibleSeries();
 				library.replaceChildren();
-				libraryCount.textContent = `${photos.length} photograph${photos.length === 1 ? '' : 's'}`;
+				libraryCount.textContent = `${items.length} series`;
 
-				if (photos.length === 0) {
-					library.append(element('p', 'library-empty', 'まだ写真がありません。上のUploadから追加してください。'));
+				if (items.length === 0) {
+					library.append(element('p', 'library-empty', 'まだシリーズがありません。上のUploadから追加してください。'));
 					return;
 				}
 
-				photos.forEach((photo, index) => {
-					const card = element('article', 'photo-card');
-					card.dataset.photoId = photo.id;
+				items.forEach((series, seriesIndex) => {
+					const card = element('article', 'series-card');
+					card.dataset.seriesId = series.id;
 
-					const media = element('div', 'photo-card__media');
-					const image = document.createElement('img');
-					image.src = photo.image;
-					image.alt = photo.alt;
-					image.loading = 'lazy';
-					media.append(image);
-					if (!photo.published) media.append(element('span', 'photo-card__hidden', 'Hidden'));
+					const media = element('div', 'series-card__media');
+					const photos = photosForSeries(series);
+					if (photos.length === 0) media.append(element('p', 'series-card__empty', 'No photographs'));
+					photos.forEach((photo, photoIndex) => {
+						const item = element('figure', 'series-photo');
+						const image = document.createElement('img');
+						image.src = photo.image;
+						image.alt = photo.alt;
+						image.loading = 'lazy';
+						const caption = element('figcaption');
+						caption.append(element('span', 'series-photo__index', String(photoIndex + 1).padStart(2, '0')));
+						const controls = element('span', 'series-photo__controls');
+						if (state.series.length > 1) {
+							const moveTarget = document.createElement('select');
+							moveTarget.className = 'series-photo__move';
+							moveTarget.setAttribute('aria-label', 'Move photograph to another series');
+							moveTarget.title = 'Move to another series';
+							state.series.forEach((item) => {
+								const option = document.createElement('option');
+								option.value = item.id;
+								option.textContent = item.id === series.id ? 'Move…' : item.title;
+								option.selected = item.id === series.id;
+								moveTarget.append(option);
+							});
+							moveTarget.addEventListener('change', () => movePhotoToSeries(photo, moveTarget.value));
+							controls.append(moveTarget);
+						}
+						if (photos.length > 1) {
+							const earlier = element('button', '', '←');
+							earlier.type = 'button';
+							earlier.title = 'Move earlier in series';
+							earlier.disabled = photoIndex === 0;
+							earlier.addEventListener('click', () => movePhoto(series, photo.id, -1));
+							const later = element('button', '', '→');
+							later.type = 'button';
+							later.title = 'Move later in series';
+							later.disabled = photoIndex === photos.length - 1;
+							controls.append(earlier, later);
+						}
+						const remove = element('button', 'series-photo__delete', 'Delete');
+						remove.type = 'button';
+						remove.addEventListener('click', () => deletePhoto(series, photo));
+						controls.append(remove);
+						caption.append(controls);
+						item.append(image, caption);
+						media.append(item);
+					});
 
-					const body = element('div', 'photo-card__body');
-					body.append(element('p', 'photo-card__filename', photo.filename || photo.id));
-					body.append(makeLabeledInput('Title / Caption', photo.title, 'title'));
-					body.append(makeLabeledInput('Image description', photo.alt, 'alt'));
+					const body = element('div', 'series-card__body');
+					const heading = element('div', 'series-card__heading');
+					heading.append(element('p', 'series-card__number', String(seriesIndex + 1).padStart(2, '0')), element('p', 'series-card__count', `${photos.length} photograph${photos.length === 1 ? '' : 's'}`));
+					body.append(heading);
+
+					const titleLabel = element('label', 'admin-field');
+					titleLabel.append(element('span', '', '案件名・テーマ名'));
+					const titleInput = document.createElement('input');
+					titleInput.type = 'text';
+					titleInput.value = series.title;
+					titleInput.maxLength = 120;
+					titleInput.dataset.field = 'title';
+					titleLabel.append(titleInput);
+					body.append(titleLabel);
 
 					const tagGroup = element('fieldset', 'photo-card__tags');
 					const legend = document.createElement('legend');
 					legend.textContent = 'Category tags';
-					tagGroup.append(legend, ...tags.map((tag) => makeTagCheckbox(photo, tag)));
+					tagGroup.append(legend, ...tags.map((tag) => makeTagCheckbox(series, tag)));
 					body.append(tagGroup);
 
 					const visibility = element('label', 'photo-visibility');
 					const published = document.createElement('input');
 					published.type = 'checkbox';
-					published.checked = photo.published;
+					published.checked = series.published;
 					published.dataset.field = 'published';
 					visibility.append(published, document.createTextNode(' Published'));
 					body.append(visibility);
@@ -242,93 +338,144 @@ import '../../styles/admin.css';
 					if (state.filter !== 'all') {
 						const previous = element('button', 'photo-order', '↑');
 						previous.type = 'button';
-						previous.title = 'Move earlier';
-						previous.disabled = index === 0;
-						previous.addEventListener('click', () => movePhoto(photo.id, -1));
+						previous.title = 'Move series earlier';
+						previous.disabled = seriesIndex === 0;
+						previous.addEventListener('click', () => moveSeries(series.id, -1));
 						const next = element('button', 'photo-order', '↓');
 						next.type = 'button';
-						next.title = 'Move later';
-						next.disabled = index === photos.length - 1;
-						next.addEventListener('click', () => movePhoto(photo.id, 1));
+						next.title = 'Move series later';
+						next.disabled = seriesIndex === items.length - 1;
+						next.addEventListener('click', () => moveSeries(series.id, 1));
 						actions.append(previous, next);
 					}
 
 					const save = element('button', 'photo-save', 'Save');
 					save.type = 'button';
-					save.addEventListener('click', () => savePhoto(card, photo));
-					const remove = element('button', 'photo-delete', 'Delete');
+					save.addEventListener('click', () => saveSeries(card, series));
+					const remove = element('button', 'photo-delete', 'Delete series');
 					remove.type = 'button';
-					remove.addEventListener('click', () => deletePhoto(photo));
+					remove.addEventListener('click', () => deleteSeries(series));
 					actions.append(save, remove);
-
 					body.append(actions);
 					card.append(media, body);
 					library.append(card);
 				});
 			}
 
-			async function loadPhotos() {
-				const payload = await requestJson<{ photos: AdminPhoto[] }>('/api/admin/photos');
+			async function loadLibrary() {
+				const payload = await requestJson<{ photos: AdminPhoto[]; series: AdminSeries[] }>('/api/admin/photos');
 				state.photos = payload.photos;
+				state.series = payload.series;
+				renderSeriesOptions();
 				renderLibrary();
 			}
 
-			async function savePhoto(card: HTMLElement, photo: AdminPhoto) {
+			async function saveSeries(card: HTMLElement, series: AdminSeries) {
 				setStatus(libraryStatus, 'Saving…');
 				const title = card.querySelector<HTMLInputElement>('[data-field="title"]')!.value;
-				const alt = card.querySelector<HTMLInputElement>('[data-field="alt"]')!.value;
 				const published = card.querySelector<HTMLInputElement>('[data-field="published"]')!.checked;
 				const selectedTags = [...card.querySelectorAll<HTMLInputElement>('[data-card-tag]:checked')].map((input) => input.value as Tag);
-
 				try {
-					const payload = await requestJson<{ photo: AdminPhoto }>(`/api/admin/photos/${photo.id}`, {
+					const payload = await requestJson<{ series: AdminSeries }>(`/api/admin/series/${series.id}`, {
 						method: 'PATCH',
 						headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({ title, alt, published, tags: selectedTags }),
+						body: JSON.stringify({ title, published, tags: selectedTags }),
 					});
-					state.photos = state.photos.map((item) => (item.id === photo.id ? payload.photo : item));
+					state.series = state.series.map((item) => (item.id === series.id ? payload.series : item));
 					setStatus(libraryStatus, 'Saved. The public site has been updated.');
+					renderSeriesOptions(seriesTarget.value);
 					renderLibrary();
 				} catch (error) {
 					setStatus(libraryStatus, error instanceof Error ? error.message : '保存できませんでした。', true);
 				}
 			}
 
-			async function deletePhoto(photo: AdminPhoto) {
-				if (!window.confirm('この写真を完全に削除しますか？')) return;
-				setStatus(libraryStatus, 'Deleting…');
+			async function deleteSeries(series: AdminSeries) {
+				if (!window.confirm(`「${series.title}」と中の写真をすべて削除しますか？`)) return;
+				setStatus(libraryStatus, 'Deleting series…');
 				try {
-					await requestJson(`/api/admin/photos/${photo.id}`, { method: 'DELETE' });
-					state.photos = state.photos.filter((item) => item.id !== photo.id);
-					setStatus(libraryStatus, 'Deleted.');
+					await requestJson(`/api/admin/series/${series.id}`, { method: 'DELETE' });
+					state.series = state.series.filter((item) => item.id !== series.id);
+					state.photos = state.photos.filter((photo) => photo.seriesId !== series.id);
+					setStatus(libraryStatus, 'Series deleted.');
+					renderSeriesOptions();
 					renderLibrary();
 				} catch (error) {
 					setStatus(libraryStatus, error instanceof Error ? error.message : '削除できませんでした。', true);
 				}
 			}
 
-			async function movePhoto(id: string, direction: -1 | 1) {
+			async function deletePhoto(series: AdminSeries, photo: AdminPhoto) {
+				if (!window.confirm('この写真をシリーズから完全に削除しますか？')) return;
+				setStatus(libraryStatus, 'Deleting photograph…');
+				try {
+					await requestJson(`/api/admin/photos/${photo.id}`, { method: 'DELETE' });
+					state.photos = state.photos.filter((item) => item.id !== photo.id);
+					series.photoIds = series.photoIds.filter((id) => id !== photo.id);
+					setStatus(libraryStatus, 'Photograph deleted.');
+					renderLibrary();
+				} catch (error) {
+					setStatus(libraryStatus, error instanceof Error ? error.message : '削除できませんでした。', true);
+				}
+			}
+
+			async function moveSeries(id: string, direction: -1 | 1) {
 				if (state.filter === 'all') return;
-				const ordered = visiblePhotos();
-				const currentIndex = ordered.findIndex((photo) => photo.id === id);
+				const ordered = visibleSeries();
+				const currentIndex = ordered.findIndex((item) => item.id === id);
 				const destination = currentIndex + direction;
 				if (currentIndex < 0 || destination < 0 || destination >= ordered.length) return;
 				[ordered[currentIndex], ordered[destination]] = [ordered[destination], ordered[currentIndex]];
-				setStatus(libraryStatus, 'Reordering…');
-
+				setStatus(libraryStatus, 'Reordering series…');
 				try {
 					await requestJson('/api/admin/order', {
 						method: 'POST',
 						headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({ tag: state.filter, ids: ordered.map((photo) => photo.id) }),
+						body: JSON.stringify({ tag: state.filter, ids: ordered.map((item) => item.id) }),
 					});
-					ordered.forEach((photo, index) => {
-						photo.positions[state.filter as Tag] = index;
-					});
-					setStatus(libraryStatus, 'Order updated.');
+					ordered.forEach((item, index) => (item.positions[state.filter as Tag] = index));
+					setStatus(libraryStatus, 'Series order updated.');
 					renderLibrary();
 				} catch (error) {
 					setStatus(libraryStatus, error instanceof Error ? error.message : '順番を変更できませんでした。', true);
+				}
+			}
+
+			async function movePhoto(series: AdminSeries, id: string, direction: -1 | 1) {
+				const currentIndex = series.photoIds.indexOf(id);
+				const destination = currentIndex + direction;
+				if (currentIndex < 0 || destination < 0 || destination >= series.photoIds.length) return;
+				const nextIds = [...series.photoIds];
+				[nextIds[currentIndex], nextIds[destination]] = [nextIds[destination], nextIds[currentIndex]];
+				setStatus(libraryStatus, 'Reordering photographs…');
+				try {
+					const payload = await requestJson<{ series: AdminSeries }>(`/api/admin/series/${series.id}`, {
+						method: 'PATCH',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ photoIds: nextIds }),
+					});
+					state.series = state.series.map((item) => (item.id === series.id ? payload.series : item));
+					setStatus(libraryStatus, 'Photograph order updated.');
+					renderLibrary();
+				} catch (error) {
+					setStatus(libraryStatus, error instanceof Error ? error.message : '順番を変更できませんでした。', true);
+				}
+			}
+
+			async function movePhotoToSeries(photo: AdminPhoto, destinationId: string) {
+				if (!destinationId || destinationId === photo.seriesId) return;
+				setStatus(libraryStatus, 'Moving photograph…');
+				try {
+					await requestJson(`/api/admin/photos/${photo.id}`, {
+						method: 'PATCH',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ seriesId: destinationId }),
+					});
+					await loadLibrary();
+					setStatus(libraryStatus, 'Photograph moved to another series.');
+				} catch (error) {
+					setStatus(libraryStatus, error instanceof Error ? error.message : '写真を移動できませんでした。', true);
+					renderLibrary();
 				}
 			}
 
@@ -377,17 +524,36 @@ import '../../styles/admin.css';
 				fileSelection.textContent = count ? `${count} photograph${count === 1 ? '' : 's'} selected` : '写真を選択してください';
 			});
 
+			seriesTarget.addEventListener('change', syncUploadMode);
+
 			uploadForm.addEventListener('submit', async (event) => {
 				event.preventDefault();
 				const files = [...(fileInput.files ?? [])];
-				const selectedTags = [...uploadForm.querySelectorAll<HTMLInputElement>('[name="upload-tag"]:checked')].map((input) => input.value as Tag);
 				if (files.length === 0) return setStatus(uploadStatus, '写真を選択してください。', true);
-				if (selectedTags.length === 0) return setStatus(uploadStatus, 'カテゴリーを1つ以上選択してください。', true);
+
+				const isNew = seriesTarget.value === 'new';
+				const selectedTags = [...uploadForm.querySelectorAll<HTMLInputElement>('[name="upload-tag"]:checked')].map((input) => input.value as Tag);
+				if (isNew && !seriesTitle.value.trim()) return setStatus(uploadStatus, '案件名・テーマ名を入力してください。', true);
+				if (isNew && selectedTags.length === 0) return setStatus(uploadStatus, 'カテゴリーを1つ以上選択してください。', true);
 
 				const submit = uploadForm.querySelector<HTMLButtonElement>('button[type="submit"]')!;
 				submit.disabled = true;
 				let completed = 0;
+				let targetSeries = state.series.find((item) => item.id === seriesTarget.value);
+				let createdSeriesId = '';
 				try {
+					if (isNew) {
+						const payload = await requestJson<{ series: AdminSeries }>('/api/admin/series', {
+							method: 'POST',
+							headers: { 'content-type': 'application/json' },
+							body: JSON.stringify({ title: seriesTitle.value, tags: selectedTags }),
+						});
+						targetSeries = payload.series;
+						createdSeriesId = payload.series.id;
+						state.series.push(payload.series);
+					}
+					if (!targetSeries) throw new Error('追加先のシリーズを選択してください。');
+
 					for (const file of files) {
 						setStatus(uploadStatus, `${completed + 1} / ${files.length} — optimizing ${file.name}`);
 						const optimized = await optimizeImage(file);
@@ -396,17 +562,27 @@ import '../../styles/admin.css';
 						form.append('filename', file.name);
 						form.append('width', String(optimized.width));
 						form.append('height', String(optimized.height));
-						selectedTags.forEach((tag) => form.append('tags', tag));
-						const payload = await requestJson<{ photo: AdminPhoto }>('/api/admin/photos', { method: 'POST', body: form });
+						form.append('seriesId', targetSeries.id);
+						const payload = await requestJson<{ photo: AdminPhoto; series: AdminSeries }>('/api/admin/photos', { method: 'POST', body: form });
 						state.photos.push(payload.photo);
+						state.series = state.series.map((item) => (item.id === payload.series.id ? payload.series : item));
+						targetSeries = payload.series;
 						completed += 1;
 					}
-					setStatus(uploadStatus, `${completed} photograph${completed === 1 ? '' : 's'} published.`);
+
+					setStatus(uploadStatus, `${targetSeries.title} — ${completed} photograph${completed === 1 ? '' : 's'} published.`);
 					uploadForm.reset();
 					fileSelection.textContent = '写真を選択してください';
+					renderSeriesOptions(targetSeries.id);
 					renderLibrary();
 				} catch (error) {
+					if (createdSeriesId && completed === 0) {
+						await requestJson(`/api/admin/series/${createdSeriesId}`, { method: 'DELETE' }).catch(() => undefined);
+						state.series = state.series.filter((item) => item.id !== createdSeriesId);
+					}
 					setStatus(uploadStatus, error instanceof Error ? error.message : 'アップロードできませんでした。', true);
+					renderSeriesOptions();
+					renderLibrary();
 				} finally {
 					submit.disabled = false;
 				}
@@ -424,7 +600,7 @@ import '../../styles/admin.css';
 					});
 					loginForm.reset();
 					showWorkspace();
-					await loadPhotos();
+					await loadLibrary();
 				} catch (error) {
 					setStatus(loginStatus, error instanceof Error ? error.message : 'ログインできませんでした。', true);
 				}
@@ -457,7 +633,7 @@ import '../../styles/admin.css';
 					}
 					if (!session.authenticated) return showLogin();
 					showWorkspace();
-					await loadPhotos();
+					await loadLibrary();
 				} catch {
 					showLogin();
 					setStatus(loginStatus, '管理機能に接続できません。', true);

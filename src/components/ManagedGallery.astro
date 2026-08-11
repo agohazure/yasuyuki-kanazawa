@@ -8,39 +8,101 @@
 		width: number;
 		height: number;
 		aspect: 'portrait' | 'landscape' | 'square';
+	};
+	type ManagedSeries = {
+		id: string;
+		title: string;
 		tags: Tag[];
 		positions: Partial<Record<Tag, number>>;
+		photos: ManagedPhoto[];
 	};
 
 	const tagOrder: Tag[] = ['portrait', 'commercial', 'landscape', 'documentary'];
 
-	function orderedPhotos(photos: ManagedPhoto[], tag: Tag) {
-		return photos
-			.filter((photo) => photo.tags.includes(tag))
+	function orderedSeries(series: ManagedSeries[], tag: Tag) {
+		return series
+			.filter((item) => item.tags.includes(tag) && item.photos.length > 0)
 			.sort((left, right) => (left.positions[tag] ?? Number.MAX_SAFE_INTEGER) - (right.positions[tag] ?? Number.MAX_SAFE_INTEGER));
 	}
 
-	function makeFigure(photo: ManagedPhoto, priority: boolean) {
+	function makeSeriesBlock(series: ManagedSeries, priority: boolean, featured = false) {
+		const cover = series.photos[0];
 		const figure = document.createElement('figure');
-		figure.className = `work-figure work-figure--managed work-figure--${photo.aspect}`;
+		figure.className = `work-series work-series--${cover.aspect}${featured ? ' work-series--featured' : ''}`;
+		figure.dataset.seriesId = series.id;
+
+		const stage = document.createElement('div');
+		stage.className = 'work-series__stage';
+		stage.tabIndex = 0;
+		stage.setAttribute('role', 'group');
+		stage.setAttribute('aria-label', `${series.title}, ${series.photos.length} photographs`);
+		if (!featured) stage.style.aspectRatio = `${cover.width} / ${cover.height}`;
 
 		const image = document.createElement('img');
-		image.className = 'work-figure__image';
-		image.src = photo.image;
-		image.alt = photo.alt;
-		image.width = photo.width;
-		image.height = photo.height;
+		image.className = 'work-series__image';
+		image.src = cover.image;
+		image.alt = cover.alt;
+		image.width = cover.width;
+		image.height = cover.height;
 		image.loading = priority ? 'eager' : 'lazy';
 		image.decoding = 'async';
 		if (priority) image.setAttribute('fetchpriority', 'high');
-		figure.append(image);
+		stage.append(image);
 
-		if (photo.title) {
-			const caption = document.createElement('figcaption');
-			caption.textContent = photo.title;
-			figure.append(caption);
+		let current = 0;
+		const counter = document.createElement('span');
+		counter.className = 'work-series__counter';
+
+		const show = (next: number) => {
+			current = (next + series.photos.length) % series.photos.length;
+			const photo = series.photos[current];
+			image.classList.remove('is-changing');
+			void image.offsetWidth;
+			image.src = photo.image;
+			image.alt = photo.alt;
+			image.width = photo.width;
+			image.height = photo.height;
+			image.classList.add('is-changing');
+			counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(series.photos.length).padStart(2, '0')}`;
+			const upcoming = series.photos[(current + 1) % series.photos.length];
+			if (upcoming && upcoming.id !== photo.id) new Image().src = upcoming.image;
+		};
+
+		if (series.photos.length > 1) {
+			const previous = document.createElement('button');
+			previous.className = 'work-series__edge work-series__edge--previous';
+			previous.type = 'button';
+			previous.setAttribute('aria-label', `Previous photograph in ${series.title}`);
+			previous.textContent = '←';
+			previous.addEventListener('click', () => show(current - 1));
+
+			const next = document.createElement('button');
+			next.className = 'work-series__edge work-series__edge--next';
+			next.type = 'button';
+			next.setAttribute('aria-label', `Next photograph in ${series.title}`);
+			next.textContent = '→';
+			next.addEventListener('click', () => show(current + 1));
+			stage.addEventListener('keydown', (event) => {
+				if (event.key === 'ArrowLeft') {
+					event.preventDefault();
+					show(current - 1);
+				}
+				if (event.key === 'ArrowRight') {
+					event.preventDefault();
+					show(current + 1);
+				}
+			});
+			stage.append(previous, next);
 		}
 
+		const meta = document.createElement('figcaption');
+		meta.className = 'work-series__meta';
+		const title = document.createElement('span');
+		title.textContent = series.title;
+		meta.append(title);
+		if (series.photos.length > 1) meta.append(counter);
+		figure.append(stage, meta);
+		show(0);
 		return figure;
 	}
 
@@ -51,24 +113,24 @@
 		try {
 			const response = await fetch('/api/works', { cache: 'no-store' });
 			if (!response.ok) return;
-			const payload = (await response.json()) as { photos?: ManagedPhoto[] };
-			const photos = Array.isArray(payload.photos) ? payload.photos : [];
-			if (photos.length === 0) return;
+			const payload = (await response.json()) as { series?: ManagedSeries[] };
+			const series = Array.isArray(payload.series) ? payload.series : [];
+			if (series.length === 0) return;
 
 			for (const gallery of galleries) {
 				const mode = gallery.dataset.managedGallery;
 				if (mode === 'featured') {
 					tagOrder.forEach((tag, index) => {
-						const photo = orderedPhotos(photos, tag)[0];
+						const item = orderedSeries(series, tag)[0];
 						const current = gallery.children[index];
-						if (photo && current) current.replaceWith(makeFigure(photo, index === 0));
+						if (item && current) current.replaceWith(makeSeriesBlock(item, index === 0, true));
 					});
 					continue;
 				}
 
 				if (!tagOrder.includes(mode as Tag)) continue;
-				const selected = orderedPhotos(photos, mode as Tag);
-				if (selected.length > 0) gallery.replaceChildren(...selected.map((photo, index) => makeFigure(photo, index === 0)));
+				const selected = orderedSeries(series, mode as Tag);
+				if (selected.length > 0) gallery.replaceChildren(...selected.map((item, index) => makeSeriesBlock(item, index === 0)));
 			}
 		} catch {
 			// Static placeholders remain visible if the media service is unavailable.

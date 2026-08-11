@@ -174,13 +174,17 @@ h2 {
 }
 
 .featured-gallery .work-figure,
-.featured-gallery .work-figure:nth-child(n) {
+.featured-gallery .work-figure:nth-child(n),
+.featured-gallery .work-series,
+.featured-gallery .work-series:nth-child(n) {
 	width: 100%;
 	margin: 0;
 }
 
 .featured-gallery .work-figure__image,
-.featured-gallery .work-figure__placeholder {
+.featured-gallery .work-figure__placeholder,
+.featured-gallery .work-series__stage,
+.featured-gallery .work-series__image {
 	height: calc(100svh - var(--header-height));
 	aspect-ratio: auto;
 	object-fit: cover;
@@ -595,8 +599,98 @@ h2 {
 	letter-spacing: 0.04em;
 }
 
-.featured-gallery .work-figure figcaption {
+.featured-gallery .work-figure figcaption,
+.featured-gallery .work-series__meta {
 	display: none;
+}
+
+.work-series {
+	width: 100%;
+}
+
+.work-series--portrait {
+	width: min(72%, 58rem);
+	margin-inline: auto;
+}
+
+.work-series__stage {
+	position: relative;
+	overflow: hidden;
+	background: var(--field);
+}
+
+.work-series__stage:focus-visible {
+	outline: 1px solid var(--ink);
+	outline-offset: 0.35rem;
+}
+
+.work-series__image {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.work-series__image.is-changing {
+	animation: series-image-in 180ms ease-out both;
+}
+
+@keyframes series-image-in {
+	from { opacity: 0.55; }
+	to { opacity: 1; }
+}
+
+.work-series__edge {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 2;
+	width: 24%;
+	padding: 0 clamp(0.75rem, 2vw, 2rem);
+	border: 0;
+	background: transparent;
+	color: var(--paper);
+	font: inherit;
+	font-size: clamp(1rem, 2vw, 1.75rem);
+	opacity: 0;
+	text-shadow: 0 1px 1rem rgba(0, 0, 0, 0.42);
+	transition: opacity 160ms ease;
+	cursor: pointer;
+}
+
+.work-series__edge--previous {
+	left: 0;
+	text-align: left;
+}
+
+.work-series__edge--next {
+	right: 0;
+	text-align: right;
+}
+
+.work-series__edge:hover,
+.work-series__edge:focus-visible {
+	opacity: 1;
+}
+
+.work-series__edge:focus-visible {
+	outline: 1px solid currentColor;
+	outline-offset: -0.5rem;
+}
+
+.work-series__meta {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 2rem;
+	padding-top: 0.75rem;
+	font-size: 0.66rem;
+	letter-spacing: 0.04em;
+}
+
+.work-series__counter {
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
 }
 
 .profile {
@@ -747,8 +841,18 @@ h2 {
 		width: 88%;
 	}
 
+	.work-series--portrait {
+		width: 88%;
+	}
+
 	.contact-row {
 		gap: 0.65rem;
+	}
+}
+
+@media (hover: none) {
+	.work-series__edge {
+		opacity: 0.72;
 	}
 }
 

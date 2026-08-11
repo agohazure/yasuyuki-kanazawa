@@ -1,11 +1,9 @@
 import { requireAdmin } from '../../../_lib/auth.js';
 import { MAX_UPLOAD_BYTES, json, sameOrigin } from '../../../_lib/config.js';
 import {
-	TAGS,
+	adminPhoto,
+	adminSeries,
 	aspectFromDimensions,
-	cleanTags,
-	nextPosition,
-	publicPhoto,
 	readManifest,
 	writeManifest,
 } from '../../../_lib/storage.js';
@@ -17,17 +15,13 @@ const CONTENT_TYPES = {
 	'image/avif': 'avif',
 };
 
-function adminPhoto(photo) {
-	return { ...publicPhoto(photo), filename: photo.filename, published: photo.published, createdAt: photo.createdAt };
-}
-
 export async function onRequestGet({ request, env }) {
 	const denied = await requireAdmin(request, env);
 	if (denied) return denied;
 	if (!env.MEDIA_BUCKET) return json({ error: 'Photo storage is not configured.' }, 503);
 
 	const manifest = await readManifest(env.MEDIA_BUCKET);
-	return json({ photos: manifest.photos.map(adminPhoto), tags: TAGS });
+	return json({ photos: manifest.photos.map(adminPhoto), series: manifest.series.map(adminSeries) });
 }
 
 export async function onRequestPost({ request, env }) {
@@ -48,18 +42,22 @@ export async function onRequestPost({ request, env }) {
 	if (!CONTENT_TYPES[file.type]) return json({ error: 'Use JPEG, PNG, WebP, or AVIF.' }, 415);
 	if (file.size > MAX_UPLOAD_BYTES) return json({ error: 'The optimized image is too large.' }, 413);
 
-	const tags = cleanTags(form.getAll('tags').map(String));
-	if (tags.length === 0) return json({ error: 'Choose at least one category.' }, 400);
+	const seriesId = String(form.get('seriesId') || '');
+	const manifest = await readManifest(env.MEDIA_BUCKET);
+	const series = manifest.series.find((item) => item.id === seriesId);
+	if (!series) return json({ error: 'Choose a valid series.' }, 400);
 
 	const width = Math.max(1, Number(form.get('width')) || 1);
 	const height = Math.max(1, Number(form.get('height')) || 1);
 	const id = crypto.randomUUID();
 	const key = `photos/${id}.${CONTENT_TYPES[file.type]}`;
-	const manifest = await readManifest(env.MEDIA_BUCKET);
-	const defaultAlt = `${tags[0][0].toUpperCase()}${tags[0].slice(1)} photograph by Yasuyuki Kanazawa`;
+	const category = series.tags[0] || 'portfolio';
+	const defaultAlt = `${category[0].toUpperCase()}${category.slice(1)} photograph by Yasuyuki Kanazawa`;
 	const photo = {
 		id,
 		key,
+		seriesId: series.id,
+		sequence: series.photoIds.length,
 		filename: String(form.get('filename') || file.name || ''),
 		title: '',
 		alt: defaultAlt,
@@ -68,8 +66,8 @@ export async function onRequestPost({ request, env }) {
 		height,
 		aspect: aspectFromDimensions(width, height),
 		published: true,
-		tags,
-		positions: Object.fromEntries(tags.map((tag) => [tag, nextPosition(manifest, tag)])),
+		tags: [],
+		positions: {},
 		createdAt: new Date().toISOString(),
 	};
 
@@ -79,11 +77,12 @@ export async function onRequestPost({ request, env }) {
 
 	try {
 		manifest.photos.push(photo);
+		series.photoIds.push(photo.id);
 		await writeManifest(env.MEDIA_BUCKET, manifest);
 	} catch (error) {
 		await env.MEDIA_BUCKET.delete(key);
 		throw error;
 	}
 
-	return json({ photo: adminPhoto(photo) }, 201);
+	return json({ photo: adminPhoto(photo), series: adminSeries(series) }, 201);
 }
