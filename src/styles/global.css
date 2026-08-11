@@ -113,6 +113,10 @@ h2 {
 	letter-spacing: 0.015em;
 }
 
+.wordmark__mobile {
+	display: none;
+}
+
 .site-header ul {
 	display: flex;
 	align-items: center;
@@ -862,8 +866,26 @@ h2 {
 	}
 
 	.wordmark {
-		max-width: 5.5rem;
-		line-height: 1.15;
+		width: 5.5rem;
+		max-width: none;
+		line-height: 1;
+	}
+
+	.wordmark__desktop {
+		display: none;
+	}
+
+	.wordmark__mobile {
+		display: grid;
+		gap: 0.18rem;
+		width: 100%;
+	}
+
+	.wordmark__line {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		width: 100%;
 	}
 }
 
