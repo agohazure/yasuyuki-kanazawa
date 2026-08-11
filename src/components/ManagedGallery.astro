@@ -105,13 +105,15 @@
 
 		let previousWidth = 0;
 		const fitTrackEnds = () => {
-			const width = track.getBoundingClientRect().width;
+			const host = (track.parentElement ?? track) as HTMLElement;
+			const width = host.getBoundingClientRect().width;
 			if (width === 0 || width === previousWidth) return;
 			previousWidth = width;
-			track.style.paddingInline = '0px';
 			if (slides.length > 1) {
 				track.style.paddingLeft = `${Math.max(0, (width - slides[0].getBoundingClientRect().width) / 2)}px`;
 				track.style.paddingRight = `${Math.max(0, (width - slides.at(-1)!.getBoundingClientRect().width) / 2)}px`;
+			} else {
+				track.style.paddingInline = '0px';
 			}
 			requestAnimationFrame(() => scrollToSlide(current, 'auto'));
 		};
