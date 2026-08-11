@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../../_lib/auth.js';
 import { MAX_UPLOAD_BYTES, json, sameOrigin } from '../../../_lib/config.js';
 import {
+	TAGS,
 	adminPhoto,
 	adminSeries,
 	aspectFromDimensions,
@@ -21,7 +22,14 @@ export async function onRequestGet({ request, env }) {
 	if (!env.MEDIA_BUCKET) return json({ error: 'Photo storage is not configured.' }, 503);
 
 	const manifest = await readManifest(env.MEDIA_BUCKET);
-	return json({ photos: manifest.photos.map(adminPhoto), series: manifest.series.map(adminSeries) });
+	const hiddenFallbacks = new Set(manifest.settings.hiddenFallbacks);
+	const previews = TAGS.filter((tag) => !hiddenFallbacks.has(tag)).map((tag) => ({
+		id: `preview-${tag}`,
+		title: `${tag[0].toUpperCase()}${tag.slice(1)} Preview series`,
+		tag,
+		photoCount: 3,
+	}));
+	return json({ photos: manifest.photos.map(adminPhoto), series: manifest.series.map(adminSeries), previews });
 }
 
 export async function onRequestPost({ request, env }) {

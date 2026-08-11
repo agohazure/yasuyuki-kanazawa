@@ -12,6 +12,7 @@ export async function onRequestGet({ env }) {
 	return json({
 		configured: true,
 		updatedAt: manifest.updatedAt,
+		hiddenFallbacks: manifest.settings.hiddenFallbacks,
 		series,
 		photos: manifest.photos.filter((photo) => photo.published).map(publicPhoto),
 	});

@@ -337,6 +337,22 @@
 	object-fit: cover;
 }
 
+.series-preview__visual {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1rem;
+	min-height: 15rem;
+	padding: 0.8rem;
+	background:
+		linear-gradient(142deg, transparent 12%, rgba(17, 17, 17, 0.065) 100%),
+		var(--field);
+	color: var(--muted);
+	font-size: 0.58rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
 .series-photo figcaption {
 	display: flex;
 	align-items: center;
@@ -402,6 +418,25 @@
 	gap: 1rem;
 	padding-bottom: 0.85rem;
 	border-bottom: 1px solid var(--line);
+}
+
+.series-preview__title {
+	font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+	font-weight: 400;
+	letter-spacing: -0.025em;
+}
+
+.series-preview__tag {
+	width: fit-content;
+	padding: 0.35rem 0.5rem;
+	border: 1px solid var(--line);
+	font-size: 0.65rem;
+}
+
+.series-preview__note {
+	color: var(--muted);
+	font-size: 0.7rem;
+	line-height: 1.7;
 }
 
 .library-empty {
@@ -546,6 +581,10 @@
 	}
 
 	.series-photo img {
+		min-height: 12rem;
+	}
+
+	.series-preview__visual {
 		min-height: 12rem;
 	}
 

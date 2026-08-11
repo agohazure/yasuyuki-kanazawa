@@ -136,6 +136,12 @@ import '../../styles/admin.css';
 				photoIds: string[];
 				createdAt: string;
 			};
+			type AdminPreview = {
+				id: string;
+				title: string;
+				tag: Tag;
+				photoCount: number;
+			};
 
 			const tags: Tag[] = ['portrait', 'commercial', 'landscape', 'documentary'];
 			const tagLabels: Record<Tag, string> = {
@@ -144,7 +150,12 @@ import '../../styles/admin.css';
 				landscape: 'Landscape',
 				documentary: 'Documentary',
 			};
-			const state: { photos: AdminPhoto[]; series: AdminSeries[]; filter: 'all' | Tag } = { photos: [], series: [], filter: 'all' };
+			const state: { photos: AdminPhoto[]; series: AdminSeries[]; previews: AdminPreview[]; filter: 'all' | Tag } = {
+				photos: [],
+				series: [],
+				previews: [],
+				filter: 'all',
+			};
 
 			const loginPanel = document.querySelector<HTMLElement>('[data-login-panel]')!;
 			const workspace = document.querySelector<HTMLElement>('[data-workspace]')!;
@@ -204,6 +215,11 @@ import '../../styles/admin.css';
 					.sort((left, right) => (left.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER) - (right.positions[state.filter as Tag] ?? Number.MAX_SAFE_INTEGER));
 			}
 
+			function visiblePreviews() {
+				if (state.filter === 'all') return state.previews;
+				return state.previews.filter((preview) => preview.tag === state.filter);
+			}
+
 			function makeTagCheckbox(series: AdminSeries, tag: Tag) {
 				const label = element('label', 'photo-tag');
 				const input = document.createElement('input');
@@ -245,13 +261,47 @@ import '../../styles/admin.css';
 
 			function renderLibrary() {
 				const items = visibleSeries();
+				const previews = visiblePreviews();
 				library.replaceChildren();
-				libraryCount.textContent = `${items.length} series`;
+				libraryCount.textContent = `${items.length + previews.length} series`;
 
-				if (items.length === 0) {
+				if (items.length === 0 && previews.length === 0) {
 					library.append(element('p', 'library-empty', 'まだシリーズがありません。上のUploadから追加してください。'));
 					return;
 				}
+
+				previews.forEach((preview, previewIndex) => {
+					const card = element('article', 'series-card series-card--preview');
+					card.dataset.previewTag = preview.tag;
+					const media = element('div', 'series-card__media series-card__media--preview');
+					for (let index = 0; index < preview.photoCount; index += 1) {
+						const item = element('figure', 'series-photo series-photo--preview');
+						const visual = element('div', 'series-preview__visual');
+						visual.append(element('span', '', String(index + 1).padStart(2, '0')), element('span', '', 'Preview'));
+						const caption = document.createElement('figcaption');
+						caption.append(element('span', 'series-photo__index', String(index + 1).padStart(2, '0')));
+						item.append(visual, caption);
+						media.append(item);
+					}
+
+					const body = element('div', 'series-card__body');
+					const heading = element('div', 'series-card__heading');
+					heading.append(
+						element('p', 'series-card__number', String(previewIndex + 1).padStart(2, '0')),
+						element('p', 'series-card__count', `${preview.photoCount} placeholder photographs`),
+					);
+					body.append(heading, element('p', 'series-preview__title', preview.title));
+					const tag = element('p', 'series-preview__tag', tagLabels[preview.tag]);
+					const note = element('p', 'series-preview__note', '実写真が未投稿のときだけ表示される仮シリーズです。削除後は復元されません。');
+					const actions = element('div', 'photo-card__actions');
+					const remove = element('button', 'photo-delete', 'Delete preview');
+					remove.type = 'button';
+					remove.addEventListener('click', () => deletePreview(preview));
+					actions.append(remove);
+					body.append(tag, note, actions);
+					card.append(media, body);
+					library.append(card);
+				});
 
 				items.forEach((series, seriesIndex) => {
 					const card = element('article', 'series-card');
@@ -307,7 +357,7 @@ import '../../styles/admin.css';
 
 					const body = element('div', 'series-card__body');
 					const heading = element('div', 'series-card__heading');
-					heading.append(element('p', 'series-card__number', String(seriesIndex + 1).padStart(2, '0')), element('p', 'series-card__count', `${photos.length} photograph${photos.length === 1 ? '' : 's'}`));
+					heading.append(element('p', 'series-card__number', String(seriesIndex + previews.length + 1).padStart(2, '0')), element('p', 'series-card__count', `${photos.length} photograph${photos.length === 1 ? '' : 's'}`));
 					body.append(heading);
 
 					const titleLabel = element('label', 'admin-field');
@@ -363,11 +413,25 @@ import '../../styles/admin.css';
 			}
 
 			async function loadLibrary() {
-				const payload = await requestJson<{ photos: AdminPhoto[]; series: AdminSeries[] }>('/api/admin/photos');
+				const payload = await requestJson<{ photos: AdminPhoto[]; series: AdminSeries[]; previews: AdminPreview[] }>('/api/admin/photos');
 				state.photos = payload.photos;
 				state.series = payload.series;
+				state.previews = payload.previews;
 				renderSeriesOptions();
 				renderLibrary();
+			}
+
+			async function deletePreview(preview: AdminPreview) {
+				if (!window.confirm(`「${preview.title}」を削除しますか？`)) return;
+				setStatus(libraryStatus, 'Deleting preview…');
+				try {
+					await requestJson(`/api/admin/previews/${preview.tag}`, { method: 'DELETE' });
+					state.previews = state.previews.filter((item) => item.tag !== preview.tag);
+					setStatus(libraryStatus, 'Preview deleted. The public site has been updated.');
+					renderLibrary();
+				} catch (error) {
+					setStatus(libraryStatus, error instanceof Error ? error.message : '仮シリーズを削除できませんでした。', true);
+				}
 			}
 
 			async function saveSeries(card: HTMLElement, series: AdminSeries) {

@@ -4,6 +4,7 @@ function emptyManifest() {
 	return {
 		version: 2,
 		updatedAt: new Date().toISOString(),
+		settings: { hiddenFallbacks: [] },
 		series: [],
 		photos: [],
 	};
@@ -94,6 +95,11 @@ function upgradeManifest(parsed) {
 	return {
 		version: 2,
 		updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
+		settings: {
+			hiddenFallbacks: Array.isArray(parsed.settings?.hiddenFallbacks)
+				? [...new Set(parsed.settings.hiddenFallbacks.filter(isTag))]
+				: [],
+		},
 		series,
 		photos,
 	};
