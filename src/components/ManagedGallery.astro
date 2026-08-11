@@ -25,6 +25,74 @@
 			.sort((left, right) => (left.positions[tag] ?? Number.MAX_SAFE_INTEGER) - (right.positions[tag] ?? Number.MAX_SAFE_INTEGER));
 	}
 
+	function makePortraitPreview(gallery: HTMLElement) {
+		const figures = [...gallery.querySelectorAll<HTMLElement>(':scope > .work-figure')];
+		const slides = figures
+			.map((figure) => figure.querySelector<HTMLElement>('.work-figure__placeholder')?.cloneNode(true) as HTMLElement | undefined)
+			.filter((slide): slide is HTMLElement => Boolean(slide));
+		if (slides.length < 2) return;
+
+		const figure = document.createElement('figure');
+		figure.className = 'work-series work-series--portrait work-series--fallback';
+
+		const stage = document.createElement('div');
+		stage.className = 'work-series__stage';
+		stage.style.aspectRatio = '4 / 5';
+		stage.tabIndex = 0;
+		stage.setAttribute('role', 'group');
+		stage.setAttribute('aria-label', `Portrait, ${slides.length} photograph preview`);
+
+		const frame = document.createElement('div');
+		frame.className = 'work-series__fallback-frame';
+		stage.append(frame);
+
+		let current = 0;
+		const counter = document.createElement('span');
+		counter.className = 'work-series__counter';
+		const show = (next: number) => {
+			current = (next + slides.length) % slides.length;
+			frame.classList.remove('is-changing');
+			void frame.offsetWidth;
+			frame.replaceChildren(slides[current].cloneNode(true));
+			frame.classList.add('is-changing');
+			counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+		};
+
+		const previous = document.createElement('button');
+		previous.className = 'work-series__edge work-series__edge--previous';
+		previous.type = 'button';
+		previous.setAttribute('aria-label', 'Previous portrait photograph');
+		previous.textContent = '←';
+		previous.addEventListener('click', () => show(current - 1));
+
+		const next = document.createElement('button');
+		next.className = 'work-series__edge work-series__edge--next';
+		next.type = 'button';
+		next.setAttribute('aria-label', 'Next portrait photograph');
+		next.textContent = '→';
+		next.addEventListener('click', () => show(current + 1));
+		stage.addEventListener('keydown', (event) => {
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				show(current - 1);
+			}
+			if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				show(current + 1);
+			}
+		});
+		stage.append(previous, next);
+
+		const meta = document.createElement('figcaption');
+		meta.className = 'work-series__meta';
+		const title = document.createElement('span');
+		title.textContent = 'Portrait';
+		meta.append(title, counter);
+		figure.append(stage, meta);
+		show(0);
+		gallery.replaceChildren(figure);
+	}
+
 	function makeSeriesBlock(series: ManagedSeries, priority: boolean, featured = false) {
 		const cover = series.photos[0];
 		const figure = document.createElement('figure');
@@ -109,6 +177,9 @@
 	async function hydrateManagedGalleries() {
 		const galleries = document.querySelectorAll<HTMLElement>('[data-managed-gallery]');
 		if (galleries.length === 0) return;
+		for (const gallery of galleries) {
+			if (gallery.dataset.managedGallery === 'portrait') makePortraitPreview(gallery);
+		}
 
 		try {
 			const response = await fetch('/api/works', { cache: 'no-store' });
