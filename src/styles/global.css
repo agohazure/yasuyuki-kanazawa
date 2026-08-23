@@ -280,7 +280,8 @@ h2 {
 }
 
 .home-about .section-heading h2,
-.home-contact .section-heading h2 {
+.home-contact .section-heading h2,
+#works .section-heading h2 {
 	font-size: clamp(1.5rem, 2.25vw, 2.5rem);
 }
 
