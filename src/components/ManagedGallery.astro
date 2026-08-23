@@ -103,26 +103,31 @@
 			track.addEventListener('pointercancel', finishDrag);
 		}
 
+		const resizeTarget = (track.parentElement ?? track) as HTMLElement;
 		let previousSignature = '';
 		const fitTrackEnds = () => {
-			const host = (track.parentElement ?? track) as HTMLElement;
-			const rect = host.getBoundingClientRect();
+			const rect = resizeTarget.getBoundingClientRect();
 			const width = rect.width;
 			if (width === 0) return;
 			const signature = `${Math.round(width)}x${Math.round(rect.height)}`;
 			if (signature === previousSignature) return;
 			previousSignature = signature;
+			track.style.paddingInline = '0px';
 			if (slides.length > 1) {
-				track.style.paddingLeft = `${Math.max(0, (width - slides[0].getBoundingClientRect().width) / 2)}px`;
-				track.style.paddingRight = `${Math.max(0, (width - slides.at(-1)!.getBoundingClientRect().width) / 2)}px`;
+				const gap = Number.parseFloat(getComputedStyle(track).columnGap) || 0;
+				const leadingSpace = Math.max(0, (width - slides[0].getBoundingClientRect().width) / 2 - gap);
+				const trailingSpace = Math.max(0, (width - slides.at(-1)!.getBoundingClientRect().width) / 2 - gap);
+				track.style.setProperty('--track-leading-space', `${leadingSpace}px`);
+				track.style.setProperty('--track-trailing-space', `${trailingSpace}px`);
 			} else {
-				track.style.paddingInline = '0px';
+				track.style.removeProperty('--track-leading-space');
+				track.style.removeProperty('--track-trailing-space');
 			}
 			requestAnimationFrame(() => scrollToSlide(current, 'auto'));
 		};
 
 		requestAnimationFrame(fitTrackEnds);
-		new ResizeObserver(fitTrackEnds).observe(track);
+		new ResizeObserver(fitTrackEnds).observe(resizeTarget);
 		updateCounter();
 	}
 

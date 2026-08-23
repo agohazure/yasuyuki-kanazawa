@@ -680,6 +680,22 @@ h2 {
 	display: none;
 	}
 
+.work-series__track::before,
+.work-series__track::after {
+	content: '';
+	display: block;
+	height: 1px;
+	pointer-events: none;
+	}
+
+.work-series__track::before {
+	flex: 0 0 var(--track-leading-space, 0px);
+	}
+
+.work-series__track::after {
+	flex: 0 0 var(--track-trailing-space, 0px);
+	}
+
 .work-series__track.is-dragging {
 	scroll-snap-type: none;
 	cursor: grabbing;
