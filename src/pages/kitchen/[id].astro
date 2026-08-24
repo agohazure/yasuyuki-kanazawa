@@ -1,0 +1,868 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+	const recipes = await getCollection('kitchen');
+
+	return recipes.map((recipe) => ({
+		params: { id: String(recipe.data.sequence).padStart(3, '0') },
+		props: { recipe },
+	}));
+}
+
+const { recipe: recipeEntry } = Astro.props as { recipe: CollectionEntry<'kitchen'> };
+const recipe = recipeEntry.data;
+const sequence = String(recipe.sequence).padStart(3, '0');
+const baseScale = recipe.meta.baseScale;
+const baseScaleOption = recipe.servingOptions.find((option) => option.key === baseScale);
+const timelinePercent = (minutes: number) => Number(((minutes / recipe.timeline.totalMinutes) * 100).toFixed(3));
+const timelineInterval = timelinePercent(5);
+---
+
+<BaseLayout title={recipe.title} description={recipe.lede} lang="ja">
+	<main id="main-content" class="kitchen-page reveal">
+		<header class="kitchen-hero container">
+			<div class="kitchen-hero__index">
+				<a class="index" href="/kitchen/">Kitchen / Recipe {sequence}</a>
+				<p class="kitchen-hero__category">{recipe.category}</p>
+			</div>
+
+			<div class="kitchen-hero__title">
+				<h1>{recipe.title}</h1>
+				<p class="kitchen-hero__lede">{recipe.lede}</p>
+			</div>
+
+			<dl class="kitchen-meta" aria-label="レシピ概要">
+				<div>
+					<dt>Time</dt>
+					<dd>{recipe.meta.timeMinutes} min</dd>
+				</div>
+				<div>
+					<dt>Tools</dt>
+					<dd>{recipe.meta.equipment.join(' / ')}</dd>
+				</div>
+			</dl>
+		</header>
+
+		<section class="kitchen-timeline" aria-labelledby="timeline-title">
+			<div class="container">
+				<div class="kitchen-section-heading">
+					<p class="index">Process / {recipe.timeline.baseLabel} / {recipe.timeline.totalMinutes} min</p>
+					<div>
+						<h2 id="timeline-title">TIMELINE</h2>
+						<p>上から下へ読むのではなく、同時に走る工程を横に読む。火を使う時間と、手を動かす時間を分けておく。</p>
+					</div>
+				</div>
+
+				<div class="timeline-scroll" tabindex="0" aria-label={`${recipe.timeline.totalMinutes}分の調理タイムライン。横方向にスクロールできます。`}>
+					<div class="timeline-board" style={`--timeline-interval: ${timelineInterval}%`}>
+						<div class="timeline-ruler" aria-hidden="true">
+							<span class="timeline-ruler__label">Minutes</span>
+							<div>
+								{Array.from({ length: recipe.timeline.totalMinutes / 5 + 1 }, (_, index) => index * 5).map((minute) => (
+									<span style={`--position: ${timelinePercent(minute)}%`}>{String(minute).padStart(2, '0')}</span>
+								))}
+							</div>
+						</div>
+
+						{recipe.timeline.tracks.map((track) => (
+							<div class="timeline-track">
+								<h3>{track.label}</h3>
+								<div class="timeline-track__lane">
+									{track.items.map((item) => (
+										<article
+											class:list={['timeline-item', `timeline-item--${item.kind}`]}
+											style={`--start: ${timelinePercent(item.start)}%; --duration: ${timelinePercent(item.end - item.start)}%`}
+										>
+											<span>{String(item.start).padStart(2, '0')}–{String(item.end).padStart(2, '0')}</span>
+											<h4>{item.title}</h4>
+											<p>{item.detail}</p>
+										</article>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="recipe-body container">
+			<aside class="ingredients" aria-labelledby="ingredients-title">
+				<div class="kitchen-section-heading kitchen-section-heading--stacked">
+					<p class="index">Ingredients</p>
+					<h2 id="ingredients-title">材料</h2>
+				</div>
+
+				<section class="serving-control" data-servings-control aria-labelledby="servings-title">
+					<div class="serving-control__main">
+						<p id="servings-title">分量</p>
+						<div class="serving-control__buttons" role="group" aria-label="人数を選択">
+							{recipe.servingOptions.map((option) => (
+								<button
+									type="button"
+									data-scale={option.key}
+									data-note={option.note}
+									aria-pressed={option.key === baseScale ? 'true' : 'false'}
+								>
+									{option.label}
+								</button>
+							))}
+						</div>
+					</div>
+					<p class="serving-control__note" aria-live="polite" data-serving-note>{baseScaleOption?.note}</p>
+				</section>
+
+				{recipe.ingredientGroups.map((group) => (
+					<section class="ingredient-group">
+						<h3>{group.label}</h3>
+						{group.note && <p class="ingredient-group__note">{group.note}</p>}
+						<ul>
+							{group.items.map((item) => (
+								<li>
+									<div>
+										<span>{item.name}</span>
+										<strong data-ingredient-amount data-amounts={JSON.stringify(item.amounts)}>{item.amounts[baseScale]}</strong>
+									</div>
+									{item.note && <p>{item.note}</p>}
+								</li>
+							))}
+						</ul>
+					</section>
+				))}
+			</aside>
+
+			<section class="method" aria-labelledby="method-title">
+				<div class="kitchen-section-heading kitchen-section-heading--stacked">
+					<p class="index">Method</p>
+					<h2 id="method-title">作り方</h2>
+				</div>
+
+				<ol class="method-list">
+					{recipe.steps.map((step, index) => (
+						<li>
+							<span class="method-list__number">{String(index + 1).padStart(2, '0')}</span>
+							<div>
+								<h3>{step.title}</h3>
+								<p>{step.body}</p>
+								{step.tip && <p class="method-list__tip">Point — {step.tip}</p>}
+							</div>
+						</li>
+					))}
+				</ol>
+			</section>
+		</div>
+
+		{recipe.story && (
+			<section class="recipe-story container" aria-labelledby="story-title">
+				<p class="index">{recipe.story.label}</p>
+				<div>
+					<h2 id="story-title">{recipe.story.title}</h2>
+					<p class="recipe-story__body">
+						{recipe.story.body.map((part) =>
+							part.href ? (
+								<a href={part.href} target="_blank" rel="noreferrer">{part.text}</a>
+							) : (
+								part.text
+							),
+						)}
+					</p>
+				</div>
+			</section>
+		)}
+
+		<section class="plating container" aria-labelledby="plating-title">
+			<div class="kitchen-section-heading">
+				<p class="index">Plating</p>
+				<h2 id="plating-title">{recipe.platingTitle}</h2>
+			</div>
+			<div class="plating-grid">
+				{recipe.platingRules.map((rule, index) => (
+					<article>
+						<span>{String(index + 1).padStart(2, '0')}</span>
+						<h3>{rule.title}</h3>
+						<p>{rule.body}</p>
+					</article>
+				))}
+			</div>
+		</section>
+
+		<section class="recipe-notes container" aria-label="補足情報">
+			<div class="variations">
+				<div class="kitchen-section-heading kitchen-section-heading--stacked">
+					<p class="index">Variations</p>
+					<h2>展開</h2>
+				</div>
+				{recipe.variations.map((variation) => (
+					<article>
+						<h3>{variation.title}</h3>
+						<p>{variation.body}</p>
+					</article>
+				))}
+			</div>
+		</section>
+
+		<footer class="kitchen-footer container">
+			<p>{recipe.provenance}</p>
+			<span>Kitchen / {sequence}</span>
+		</footer>
+	</main>
+</BaseLayout>
+
+<script>
+	const servingControl = document.querySelector<HTMLElement>('[data-servings-control]');
+	const servingButtons = servingControl?.querySelectorAll<HTMLButtonElement>('[data-scale]') ?? [];
+	const servingNote = servingControl?.querySelector<HTMLElement>('[data-serving-note]');
+	const ingredientAmounts = document.querySelectorAll<HTMLElement>('[data-ingredient-amount]');
+
+	servingButtons.forEach((button) => {
+		button.addEventListener('click', () => {
+			const scale = button.dataset.scale;
+			if (!scale) return;
+
+			servingButtons.forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
+			if (servingNote) servingNote.textContent = button.dataset.note ?? '';
+
+			ingredientAmounts.forEach((amount) => {
+				const amounts = JSON.parse(amount.dataset.amounts ?? '{}') as Record<string, string>;
+				if (amounts[scale]) amount.textContent = amounts[scale];
+			});
+		});
+	});
+</script>
+
+<style>
+	.kitchen-page {
+		--kitchen-cream: #f1f0ec;
+		--type-caption: 0.66rem;
+		--type-small: 0.75rem;
+		--type-body: 0.84rem;
+		font-feature-settings: 'palt';
+	}
+
+	.kitchen-hero {
+		display: grid;
+		gap: clamp(1.5rem, 3vw, 2.75rem);
+		padding-top: clamp(1.5rem, 3vw, 3rem);
+		padding-bottom: clamp(3rem, 6vw, 6rem);
+	}
+
+	.kitchen-hero__index,
+	.kitchen-meta,
+	.kitchen-footer {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 2rem;
+	}
+
+	.kitchen-hero__category {
+		color: var(--muted);
+		font-size: var(--type-caption);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	.kitchen-hero__title {
+		align-self: start;
+	}
+
+	.kitchen-hero h1 {
+		max-width: none;
+		font-size: clamp(1.15rem, 3.8vw, 4.5rem);
+		letter-spacing: -0.065em;
+		line-height: 1;
+		white-space: nowrap;
+	}
+
+	.kitchen-hero__lede {
+		width: min(100%, 43rem);
+		margin-top: clamp(1.25rem, 2vw, 2rem);
+		margin-left: auto;
+		font-size: clamp(0.9rem, 1.35vw, 1.25rem);
+		line-height: 1.8;
+	}
+
+	.serving-control {
+		margin-bottom: 3rem;
+		padding-block: 0.85rem;
+		border-top: 1px solid var(--line);
+		border-bottom: 1px solid var(--line);
+	}
+
+	.serving-control__main {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	.serving-control__main > p {
+		font-size: var(--type-caption);
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.serving-control__buttons {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		border: 1px solid var(--ink);
+	}
+
+	.serving-control button {
+		min-width: 0;
+		padding: 0.55rem 0.65rem;
+		border: 0;
+		border-right: 1px solid var(--ink);
+		background: transparent;
+		color: var(--ink);
+		font: inherit;
+		font-size: var(--type-small);
+		cursor: pointer;
+	}
+
+	.serving-control button:last-child {
+		border-right: 0;
+	}
+
+	.serving-control button[aria-pressed='true'] {
+		background: var(--ink);
+		color: var(--paper);
+	}
+
+	.serving-control button:focus-visible {
+		position: relative;
+		z-index: 1;
+		outline: 1px solid var(--ink);
+		outline-offset: 0.2rem;
+	}
+
+	.serving-control__note {
+		margin-top: 0.75rem;
+		color: var(--muted);
+		font-size: var(--type-small);
+		line-height: 1.6;
+	}
+
+	.kitchen-meta {
+		margin: 0;
+		padding-top: 1rem;
+		border-top: 1px solid var(--ink);
+	}
+
+	.kitchen-meta div {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+	}
+
+	.kitchen-meta dt {
+		color: var(--muted);
+		font-size: var(--type-caption);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.kitchen-meta dd {
+		margin: 0;
+		font-size: var(--type-small);
+	}
+
+	.kitchen-timeline {
+		padding-block: clamp(5rem, 10vw, 11rem);
+		background: var(--kitchen-cream);
+	}
+
+	.kitchen-section-heading {
+		display: grid;
+		grid-template-columns: 1fr 3fr;
+		align-items: baseline;
+		gap: 2rem;
+		margin-bottom: clamp(2.5rem, 5vw, 5rem);
+	}
+
+	.kitchen-section-heading--stacked {
+		display: block;
+	}
+
+	.kitchen-section-heading--stacked .index {
+		margin-bottom: 1rem;
+	}
+
+	.kitchen-section-heading h2 {
+		font-size: clamp(2rem, 4.5vw, 5rem);
+	}
+
+	.kitchen-timeline .kitchen-section-heading > div > p {
+		max-width: 40rem;
+		margin-top: 1.5rem;
+		color: var(--muted);
+		font-size: var(--type-body);
+		line-height: 1.8;
+	}
+
+	.kitchen-timeline #timeline-title {
+		font-size: clamp(4rem, 8.5vw, 9.5rem);
+		letter-spacing: -0.075em;
+		line-height: 0.82;
+	}
+
+	.timeline-scroll {
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scrollbar-width: thin;
+	}
+
+	.timeline-scroll:focus-visible {
+		outline: 1px solid var(--ink);
+		outline-offset: 0.5rem;
+	}
+
+	.timeline-board {
+		min-width: 58rem;
+		border-top: 1px solid var(--ink);
+		border-bottom: 1px solid var(--ink);
+	}
+
+	.timeline-ruler,
+	.timeline-track {
+		display: grid;
+		grid-template-columns: 6.5rem 1fr;
+	}
+
+	.timeline-ruler {
+		min-height: 2.75rem;
+		align-items: end;
+		border-bottom: 1px solid var(--line);
+		color: var(--muted);
+		font-size: var(--type-caption);
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.timeline-ruler__label {
+		padding-bottom: 0.7rem;
+	}
+
+	.timeline-ruler > div {
+		position: relative;
+		height: 100%;
+	}
+
+	.timeline-ruler > div span {
+		position: absolute;
+		left: var(--position);
+		bottom: 0.7rem;
+		transform: translateX(-50%);
+	}
+
+	.timeline-ruler > div span:first-child {
+		transform: none;
+	}
+
+	.timeline-ruler > div span:last-child {
+		transform: translateX(-100%);
+	}
+
+	.timeline-track {
+		border-bottom: 1px solid var(--line);
+	}
+
+	.timeline-track:last-child {
+		border-bottom: 0;
+	}
+
+	.timeline-track > h3 {
+		margin: 0;
+		padding-top: 1rem;
+		font-size: var(--type-caption);
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.timeline-track__lane {
+		position: relative;
+		height: 9.25rem;
+		background: repeating-linear-gradient(
+			to right,
+			transparent 0,
+			transparent calc(var(--timeline-interval, 20%) - 1px),
+			color-mix(in srgb, var(--ink) 12%, transparent) calc(var(--timeline-interval, 20%) - 1px),
+			color-mix(in srgb, var(--ink) 12%, transparent) var(--timeline-interval, 20%)
+		);
+	}
+
+	.timeline-item {
+		position: absolute;
+		top: 0.75rem;
+		left: var(--start);
+		width: var(--duration);
+		height: 7.75rem;
+		min-width: 3.4rem;
+		padding: 0.6rem 0.5rem;
+		overflow: hidden;
+		border: 1px solid var(--ink);
+		background: var(--paper);
+	}
+
+	.timeline-item--heat {
+		background: var(--ink);
+		color: var(--paper);
+	}
+
+	.timeline-item--passive {
+		background: repeating-linear-gradient(-45deg, transparent 0 0.35rem, rgba(17, 17, 17, 0.055) 0.35rem 0.7rem), var(--paper);
+	}
+
+	.timeline-item > span {
+		display: block;
+		margin-bottom: 0.35rem;
+		font-size: var(--type-caption);
+		letter-spacing: 0.08em;
+	}
+
+	.timeline-item h4 {
+		margin: 0;
+		font-size: var(--type-small);
+		font-weight: 500;
+		line-height: 1.25;
+		overflow-wrap: anywhere;
+	}
+
+	.timeline-item p {
+		margin-top: 0.2rem;
+		font-size: var(--type-caption);
+		line-height: 1.3;
+		opacity: 0.72;
+	}
+
+	.recipe-body {
+		display: grid;
+		grid-template-columns: minmax(16rem, 1fr) minmax(0, 2fr);
+		gap: clamp(4rem, 9vw, 11rem);
+		padding-top: clamp(6rem, 12vw, 13rem);
+		padding-bottom: clamp(7rem, 14vw, 15rem);
+	}
+
+	.ingredients {
+		align-self: start;
+		position: sticky;
+		top: calc(var(--header-height) + 2rem);
+	}
+
+	.ingredient-group + .ingredient-group {
+		margin-top: 2.75rem;
+	}
+
+	.ingredient-group__note {
+		margin: -0.35rem 0 0.8rem;
+		color: var(--muted);
+		font-size: var(--type-caption);
+		line-height: 1.6;
+	}
+
+	.ingredient-group h3,
+	.variations article h3 {
+		margin: 0 0 0.8rem;
+		font-size: var(--type-caption);
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.ingredient-group ul {
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--ink);
+		list-style: none;
+	}
+
+	.ingredient-group li {
+		padding-block: 0.85rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.ingredient-group li > div {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.ingredient-group li span,
+	.ingredient-group li strong {
+		font-size: var(--type-small);
+	}
+
+	.ingredient-group li strong {
+		flex: 0 0 auto;
+		font-weight: 500;
+	}
+
+	.ingredient-group li p {
+		margin-top: 0.25rem;
+		color: var(--muted);
+		font-size: var(--type-caption);
+	}
+
+	.method-list {
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--ink);
+		list-style: none;
+	}
+
+	.method-list li {
+		display: grid;
+		grid-template-columns: 3rem 1fr;
+		gap: 1.5rem;
+		padding-block: clamp(1.75rem, 3.5vw, 3.25rem);
+		border-bottom: 1px solid var(--line);
+	}
+
+	.method-list__number {
+		color: var(--muted);
+		font-size: var(--type-caption);
+		letter-spacing: 0.1em;
+	}
+
+	.method-list h3 {
+		margin: 0 0 1rem;
+		font-size: clamp(1.2rem, 2vw, 1.85rem);
+		font-weight: 400;
+		letter-spacing: -0.035em;
+	}
+
+	.method-list p {
+		font-size: var(--type-body);
+		line-height: 1.95;
+	}
+
+	.method-list__tip {
+		margin-top: 1rem;
+		padding-left: 1rem;
+		border-left: 1px solid var(--ink);
+		color: var(--muted);
+	}
+
+	.recipe-story {
+		display: grid;
+		grid-template-columns: 1fr 3fr;
+		gap: 2rem;
+		padding-top: clamp(4rem, 7vw, 7rem);
+		padding-bottom: clamp(4rem, 7vw, 7rem);
+		border-top: 1px solid var(--line);
+	}
+
+	.recipe-story > div {
+		display: grid;
+		grid-template-columns: minmax(12rem, 1fr) minmax(0, 1.8fr);
+		align-items: start;
+		gap: clamp(2rem, 5vw, 6rem);
+	}
+
+	.recipe-story h2 {
+		margin: 0;
+		font-size: clamp(1.2rem, 2vw, 1.85rem);
+		font-weight: 400;
+		line-height: 1.4;
+		letter-spacing: -0.035em;
+		text-wrap: balance;
+	}
+
+	.recipe-story__body {
+		max-width: 38rem;
+		margin: 0;
+		font-size: var(--type-body);
+		line-height: 2;
+		text-wrap: pretty;
+	}
+
+	.recipe-story__body a {
+		color: inherit;
+		text-decoration-color: currentColor;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 0.2em;
+	}
+
+	.plating {
+		padding-top: clamp(5rem, 10vw, 11rem);
+		padding-bottom: clamp(6rem, 12vw, 13rem);
+		border-top: 1px solid var(--line);
+	}
+
+	.plating-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		border-top: 1px solid var(--ink);
+	}
+
+	.plating-grid article {
+		min-height: 13rem;
+		display: grid;
+		grid-template-columns: 2.5rem minmax(0, 1fr);
+		grid-template-rows: auto 1fr;
+		align-content: start;
+		padding: 1rem 1.5rem 1.5rem 0;
+		border-right: 1px solid var(--line);
+	}
+
+	.plating-grid article + article {
+		padding-left: 1.5rem;
+	}
+
+	.plating-grid article:last-child {
+		padding-right: 0;
+		border-right: 0;
+	}
+
+	.plating-grid span {
+		grid-column: 1;
+		grid-row: 1;
+		padding-top: 0.25rem;
+		color: var(--muted);
+		font-size: var(--type-caption);
+		letter-spacing: 0.1em;
+	}
+
+	.plating-grid h3 {
+		grid-column: 2;
+		grid-row: 1;
+		margin: 0;
+		font-size: clamp(1.4rem, 2.5vw, 2.75rem);
+		font-weight: 400;
+		letter-spacing: -0.04em;
+	}
+
+	.plating-grid p {
+		grid-column: 2;
+		grid-row: 2;
+		max-width: 30rem;
+		margin-top: 1rem;
+		color: var(--muted);
+		font-size: var(--type-small);
+		line-height: 1.8;
+	}
+
+	.recipe-notes {
+		padding-block: clamp(6rem, 12vw, 13rem);
+		border-top: 1px solid var(--line);
+	}
+
+	.variations {
+		width: min(100%, 52rem);
+		margin-left: auto;
+	}
+
+	.variations article {
+		padding-block: 1rem;
+		border-top: 1px solid var(--line);
+	}
+
+	.variations article p {
+		font-size: var(--type-small);
+		line-height: 1.8;
+	}
+
+	.kitchen-footer {
+		padding-top: 1.25rem;
+		padding-bottom: 2rem;
+		border-top: 1px solid var(--ink);
+		color: var(--muted);
+		font-size: var(--type-caption);
+	}
+
+	@media (max-width: 64rem) {
+		.recipe-body {
+			grid-template-columns: 1fr 1.6fr;
+			gap: 4rem;
+		}
+	}
+
+	@media (max-width: 48rem) {
+		.kitchen-hero {
+			padding-top: 1.5rem;
+			padding-bottom: 3rem;
+		}
+
+		.kitchen-hero__title {
+			padding-block: 1rem;
+		}
+
+		.kitchen-hero h1 {
+			font-size: max(0.72rem, 3.8vw);
+		}
+
+		.kitchen-hero__lede {
+			margin-left: 0;
+		}
+
+		.kitchen-meta {
+			align-items: flex-start;
+		}
+
+		.kitchen-meta div {
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+
+		.kitchen-section-heading,
+		.recipe-story,
+		.recipe-body {
+			grid-template-columns: 1fr;
+		}
+
+		.kitchen-section-heading {
+			gap: 1rem;
+		}
+
+		.recipe-story {
+			gap: 1.5rem;
+		}
+
+		.recipe-story > div {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+
+		.recipe-body,
+		.recipe-notes {
+			gap: 5rem;
+		}
+
+		.ingredients {
+			position: static;
+		}
+
+		.plating-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.plating-grid article,
+		.plating-grid article + article {
+			min-height: 0;
+			padding: 1rem 0 1.5rem;
+			border-right: 0;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.plating-grid article:last-child {
+			border-bottom: 0;
+		}
+
+		.kitchen-footer {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+	}
+
+	@media (max-width: 32rem) {
+		.method-list li {
+			grid-template-columns: 2rem 1fr;
+			gap: 0.75rem;
+		}
+	}
+</style>

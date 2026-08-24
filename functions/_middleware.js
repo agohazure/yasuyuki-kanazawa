@@ -2,6 +2,10 @@ import { isSiteAuthenticated, siteAuthIsConfigured } from './_lib/site-auth.js';
 
 const OPEN_PATHS = new Set(['/api/site-login', '/api/site-logout']);
 
+function isPublicPath(pathname) {
+	return pathname === '/kitchen' || pathname.startsWith('/kitchen/');
+}
+
 function escapeHtml(value) {
 	return String(value)
 		.replaceAll('&', '&amp;')
@@ -56,7 +60,7 @@ function loginPage(request, configured) {
 
 export async function onRequest({ request, env, next }) {
 	const url = new URL(request.url);
-	if (OPEN_PATHS.has(url.pathname)) return next();
+	if (OPEN_PATHS.has(url.pathname) || isPublicPath(url.pathname)) return next();
 	if (await isSiteAuthenticated(request, env)) return next();
 
 	const acceptsHtml = request.headers.get('accept')?.includes('text/html');

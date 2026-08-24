@@ -1,0 +1,141 @@
+{
+	"schema": "kitchen-recipe/1",
+	"sequence": 2,
+	"title": "Tres salsas — 玉ねぎベース一括仕込み",
+	"category": "Salsas / Preparación por lotes",
+	"lede": "玉ねぎ、パクチー、ハラペーニョ、ライムの共通ベースを一度に仕込み、Salsa de umeboshi、Pico de gallo、Pico de gallo con aguacateへ順番に分ける。分割前に塩とにんにくを入れないことが、味を崩さない条件。",
+	"provenance": "提供された原案をもとに、10人前基準の分量と三分岐の時間設計を整理。",
+	"meta": {
+		"baseScale": "10",
+		"timeMinutes": 45,
+		"equipment": ["大型ボウル 2つ", "はかり", "保存容器 3つ"],
+		"tags": ["火を使わない", "一括仕込み", "3分岐"]
+	},
+	"servingOptions": [
+		{ "key": "5", "label": "5人前", "note": "10人前の半量。分岐後の量が小さいため、梅干しと塩は特に計量して加える。" },
+		{ "key": "10", "label": "10人前", "note": "このレシピと45分タイムラインの基準量。3種合計で約2.1kg。" },
+		{ "key": "15", "label": "15人前", "note": "10人前の1.5倍。刻む場所と大型ボウル、保存容器の容量を先に確保する。" }
+	],
+	"ingredientGroups": [
+		{
+			"label": "Base común｜Cebolla, cilantro y jalapeño",
+			"note": "この段階では塩・にんにく・トマトを入れない。",
+			"items": [
+				{ "name": "玉ねぎ", "amounts": { "5": "2〜3個・450g", "10": "4〜5個・900g", "15": "6〜8個・1350g" }, "note": "白玉ねぎが理想。5mm角" },
+				{ "name": "パクチー（香菜）", "amounts": { "5": "5束・150g", "10": "10束・300g", "15": "15束・450g" }, "note": "1束30g換算。茎ごと粗みじん" },
+				{ "name": "ハラペーニョ", "amounts": { "5": "2〜3本", "10": "5本", "15": "7〜8本" }, "note": "辛味を立てるなら種ごと刻む" },
+				{ "name": "ライム果汁", "amounts": { "5": "100ml", "10": "200ml", "15": "300ml" }, "note": "余った液は分割時に切り、取り置く" }
+			]
+		},
+		{
+			"label": "A｜Salsa de umeboshi",
+			"note": "共通ベースの1/3に加える。",
+			"items": [
+				{ "name": "梅干し（白干し）の果肉", "amounts": { "5": "23g", "10": "45g", "15": "68g" }, "note": "塩分18〜20%が前提。種を除いて叩き、塩は加えない" }
+			]
+		},
+		{
+			"label": "B｜Pico de gallo",
+			"note": "残り2/3のベースに加える。",
+			"items": [
+				{ "name": "トマト", "amounts": { "5": "1〜2個・225g", "10": "3個・450g", "15": "4〜5個・675g" }, "note": "種とゼリーを除いて5mm角" },
+				{ "name": "にんにく", "amounts": { "5": "1/2片", "10": "1片", "15": "1と1/2片" }, "note": "すりおろさず、みじん切り" },
+				{ "name": "塩", "amounts": { "5": "小さじ1/2", "10": "小さじ1", "15": "小さじ1と1/2" }, "note": "分岐Bにのみ使う" }
+			]
+		},
+		{
+			"label": "C｜Pico de gallo con aguacate",
+			"note": "分岐Bの半量を取り分けて加える。",
+			"items": [
+				{ "name": "アボカド", "amounts": { "5": "1個", "10": "2個", "15": "3個" }, "note": "完熟を2cm角に切り、潰さない" }
+			]
+		}
+	],
+	"timeline": {
+		"totalMinutes": 45,
+		"baseLabel": "10 servings",
+		"tracks": [
+			{
+				"label": "Preparación",
+				"items": [
+					{ "start": 0, "end": 10, "title": "玉ねぎを刻む", "detail": "切った端からライムへ", "kind": "active" },
+					{ "start": 10, "end": 20, "title": "香菜と唐辛子", "detail": "刻んでベースへ加える", "kind": "active" },
+					{ "start": 20, "end": 30, "title": "分岐材料を準備", "detail": "トマト・梅・容器", "kind": "active" }
+				]
+			},
+			{
+				"label": "Reposo",
+				"items": [
+					{ "start": 10, "end": 30, "title": "玉ねぎをライムに置く", "detail": "無塩のまま20分", "kind": "passive" }
+				]
+			},
+			{
+				"label": "Salsas",
+				"items": [
+					{ "start": 30, "end": 33, "title": "ベースを分ける", "detail": "1/3 + 2/3", "kind": "active" },
+					{ "start": 33, "end": 36, "title": "Umeboshi", "detail": "Salsa A", "kind": "active" },
+					{ "start": 36, "end": 42, "title": "Pico de gallo", "detail": "Salsa B", "kind": "active" },
+					{ "start": 42, "end": 45, "title": "Pico + aguacate", "detail": "Salsa C", "kind": "active" }
+				]
+			}
+		]
+	},
+	"story": {
+		"label": "Origin",
+		"title": "肉の脂には、梅の酸味。",
+		"body": [
+			{ "text": "Salsa de umeboshiは、" },
+			{ "text": "Ryuichi Ono", "href": "https://ryuichiono.com/" },
+			{ "text": "が「たぶん肉に合うだろう」と、何となく考えたオリジナル。実際に合わせてみると、肉の脂を梅の酸味と塩気が切り、想像以上に具合がよかった。それ以来、繰り返し作る定番になった。" }
+		]
+	},
+	"platingTitle": "ひとつのベース、三つの着地。",
+	"steps": [
+		{
+			"title": "玉ねぎを先にライムへ入れる",
+			"body": "玉ねぎを5mm角に切り、切った端から大型ボウルへ入れてライム果汁を回しかける。全体を一度返し、玉ねぎがライムに触れた時点から20分を計る。",
+			"tip": "この段階では塩を入れない。先に塩を入れると、後で梅干しを加える分岐Aが塩辛くなる。"
+		},
+		{
+			"title": "待ち時間に残りを刻む",
+			"body": "パクチーは茎ごと粗みじん、ハラペーニョはみじん切りにし、玉ねぎのボウルへ加える。残りの待ち時間でトマトの種とゼリーを除いて5mm角に切り、梅干しを叩き、保存容器を3つ用意する。",
+			"tip": "辛味を立てたい場合はハラペーニョの種を残す。玉ねぎとハラペーニョの粒を揃えると、大量に作っても見た目が整う。"
+		},
+		{
+			"title": "ライム液を切って三分割する",
+			"body": "20分置いたベースをザルへあけ、余ったライム液をボウルに取り置く。中身をはかり、まず1/3と2/3に分ける。2/3側は、あとで半分ずつBとCにする。",
+			"tip": "目分量では分岐Aの塩分が狂う。取り置いたライム液は、分岐Bの酸味を最後に戻すために使う。"
+		},
+		{
+			"title": "Salsa de umeboshiを仕上げる",
+			"body": "1/3のベースへ、種を除いて包丁で叩いた白干し梅の果肉を混ぜる。塩は加えず、梅干しの塩分だけで調味する。",
+			"tip": "塩分18〜20%の白干し梅が基準。調味梅干しを使う場合は、味を見ながら塩を少量ずつ補う。"
+		},
+		{
+			"title": "Pico de galloを仕上げる",
+			"body": "2/3のベースへ、みじん切りのにんにくと塩を混ぜる。最後にトマトを加え、形を壊さないよう大きく2〜3回だけ返す。酸味が弱ければ、取り置いたライム液を少量戻す。",
+			"tip": "にんにくはすりおろさない。香りが時間とともに強くなるため、みじん切りを少量に留める。"
+		},
+		{
+			"title": "Pico de gallo con aguacateを仕上げる",
+			"body": "分岐Bの半量を別の容器へ取り分ける。完熟アボカドを2cm角に切って加え、潰さずに2〜3回返す。",
+			"tip": "アボカドが主役のguacamoleではなく、刻み野菜が主役。食べる直前に作ると色と粒を保てる。"
+		},
+		{
+			"title": "別々の容器で休ませる",
+			"body": "Salsa de umeboshi、Pico de gallo、Pico de gallo con aguacateをそれぞれ別の容器へ入れる。Salsa de umeboshiは冷蔵3日、Pico de galloは冷蔵2日を目安にし、Pico de gallo con aguacateは当日中に使い切る。冷蔵した二種は、食べる10分前に出して香りを戻す。",
+			"tip": "Pico de galloは時間とともにトマトの水分が出る。底から混ぜ返さず、必要なら上澄みを切ってから使う。"
+		}
+	],
+	"platingRules": [
+		{ "title": "器を分ける", "body": "共通ベースが同じだからこそ、隣り合わせに盛らず、三つの器で差を残す。" },
+		{ "title": "上からすくう", "body": "水分は底へ溜まる。底から混ぜ返さず、粒と色が残る上側から取る。" },
+		{ "title": "Pico de gallo con aguacateは最後に", "body": "アボカド入りだけは卓へ出す直前に仕上げ、明るい黄緑と角を保つ。" }
+	],
+	"variations": [
+		{ "title": "ベースのみで使う", "body": "分岐させず、玉ねぎ、パクチー、ハラペーニョ、ライムのまま cebolla con cilantro として焼いた肉に添える。" },
+		{ "title": "Salsa de umeboshiに紫蘇を足す", "body": "紫蘇漬けの梅干しを使うか、赤紫蘇を刻んで加える。パクチーと衝突せず、香りの層が増える。" },
+		{ "title": "Pico de galloをトマト優位にする", "body": "トマトを1.5倍にすると玉ねぎの主張が弱まり、salsa mexicanaの標準的なバランスへ近づく。" },
+		{ "title": "四つ目へ分岐する", "body": "ベースの一部にsalsa machaを混ぜる。油と焙煎香が入り、水分主体の三種とは質の違う一皿になる。" }
+	]
+}

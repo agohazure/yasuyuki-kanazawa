@@ -1,0 +1,206 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const recipes = (await getCollection('kitchen')).sort((a, b) => a.data.sequence - b.data.sequence);
+---
+
+<BaseLayout title="Kitchen" description="料理の概要と調理時間から選べるレシピ目次。" lang="ja">
+	<main id="main-content" class="kitchen-index reveal">
+		<header class="kitchen-index__hero container">
+			<p class="index">Kitchen / Index</p>
+			<div>
+				<h1>KITCHEN</h1>
+				<p>レシピと、その時間設計。</p>
+			</div>
+		</header>
+
+		<section class="recipe-index container" aria-labelledby="recipe-index-title">
+			<div class="recipe-index__heading">
+				<h2 id="recipe-index-title">Recipes</h2>
+				<p>{String(recipes.length).padStart(2, '0')} entries</p>
+			</div>
+
+			<div class="recipe-index__labels" aria-hidden="true">
+				<span>No.</span>
+				<span>Menu</span>
+				<span>Description</span>
+				<span>Time</span>
+			</div>
+
+			<ol class="recipe-index__list">
+				{recipes.map((recipe) => {
+					const sequence = String(recipe.data.sequence).padStart(3, '0');
+
+					return (
+						<li>
+							<a href={`/kitchen/${sequence}/`}>
+								<span class="recipe-index__number">{sequence}</span>
+								<h3>{recipe.data.title}</h3>
+								<p class="recipe-index__lede">{recipe.data.lede}</p>
+								<p class="recipe-index__time"><span class="visually-hidden">調理時間 </span>{recipe.data.meta.timeMinutes} min</p>
+							</a>
+						</li>
+					);
+				})}
+			</ol>
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.kitchen-index {
+		--kitchen-cream: #f1f0ec;
+		--type-caption: 0.66rem;
+		--type-small: 0.75rem;
+		--type-body: 0.84rem;
+		min-height: calc(100svh - var(--header-height));
+		padding-bottom: clamp(5rem, 10vw, 10rem);
+		font-feature-settings: 'palt';
+	}
+
+	.kitchen-index__hero {
+		display: grid;
+		grid-template-columns: 1fr 3fr;
+		align-items: end;
+		gap: 2rem;
+		padding-top: clamp(2rem, 4vw, 4rem);
+		padding-bottom: clamp(4rem, 8vw, 8rem);
+	}
+
+	.kitchen-index__hero h1 {
+		font-size: clamp(3.75rem, 9vw, 10rem);
+		letter-spacing: -0.075em;
+		line-height: 0.82;
+	}
+
+	.kitchen-index__hero > div > p {
+		margin-top: 1.5rem;
+		color: var(--muted);
+		font-size: var(--type-body);
+	}
+
+	.recipe-index {
+		border-top: 1px solid var(--ink);
+	}
+
+	.recipe-index__heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 2rem;
+		padding-block: 1.25rem clamp(3rem, 6vw, 6rem);
+	}
+
+	.recipe-index__heading h2 {
+		font-size: clamp(2rem, 4.5vw, 5rem);
+	}
+
+	.recipe-index__heading p,
+	.recipe-index__labels,
+	.recipe-index__number {
+		color: var(--muted);
+		font-size: var(--type-caption);
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.recipe-index__labels,
+	.recipe-index__list a {
+		display: grid;
+		grid-template-columns: 4.5rem minmax(15rem, 1fr) minmax(18rem, 1.35fr) 5rem;
+		gap: clamp(1.25rem, 3vw, 3.5rem);
+	}
+
+	.recipe-index__labels {
+		padding-bottom: 0.8rem;
+	}
+
+	.recipe-index__list {
+		margin: 0;
+		padding: 0;
+		border-bottom: 1px solid var(--ink);
+		list-style: none;
+	}
+
+	.recipe-index__list li {
+		border-top: 1px solid var(--line);
+	}
+
+	.recipe-index__list li:first-child {
+		border-top-color: var(--ink);
+	}
+
+	.recipe-index__list a {
+		align-items: start;
+		padding-block: clamp(1.5rem, 3vw, 2.75rem);
+		transition: background-color 180ms ease;
+	}
+
+	.recipe-index__list a:hover {
+		background: var(--kitchen-cream);
+	}
+
+	.recipe-index__list h3 {
+		margin: 0;
+		font-size: clamp(1.25rem, 2.25vw, 2.5rem);
+		font-weight: 400;
+		letter-spacing: -0.045em;
+		line-height: 1.15;
+	}
+
+	.recipe-index__lede {
+		max-width: 42rem;
+		font-size: var(--type-body);
+		line-height: 1.85;
+	}
+
+	.recipe-index__time {
+		font-size: var(--type-small);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 64rem) {
+		.recipe-index__labels,
+		.recipe-index__list a {
+			grid-template-columns: 3.5rem minmax(12rem, 1fr) minmax(15rem, 1.2fr) 4rem;
+			gap: 1.5rem;
+		}
+	}
+
+	@media (max-width: 48rem) {
+		.kitchen-index__hero {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+			padding-bottom: 4rem;
+		}
+
+		.recipe-index__heading {
+			padding-bottom: 3rem;
+		}
+
+		.recipe-index__labels {
+			display: none;
+		}
+
+		.recipe-index__list a {
+			grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+			gap: 1rem;
+		}
+
+		.recipe-index__list h3 {
+			grid-column: 2;
+		}
+
+		.recipe-index__lede {
+			grid-column: 2 / -1;
+		}
+
+		.recipe-index__time {
+			grid-column: 3;
+			grid-row: 1;
+		}
+	}
+</style>

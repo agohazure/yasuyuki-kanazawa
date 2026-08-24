@@ -5,11 +5,13 @@ import '../styles/global.css';
 interface Props {
 	title?: string;
 	description?: string;
+	lang?: string;
 }
 
 const {
 	title,
 	description = 'Photography portfolio of Yasuyuki Kanazawa. Portrait, commercial, landscape, and documentary work.',
+	lang = 'en',
 } = Astro.props;
 
 const pageTitle = title ? `${title} | Yasuyuki Kanazawa` : 'Yasuyuki Kanazawa';
@@ -18,7 +20,7 @@ const socialImageURL = Astro.site ? new URL('/og.png', Astro.site) : new URL('/o
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
