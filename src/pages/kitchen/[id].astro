@@ -102,9 +102,10 @@ const timelineInterval = timelinePercent(5);
 							{recipe.servingOptions.map((option) => (
 								<button
 									type="button"
-									data-scale={option.key}
+									data-scale={option.disabled ? undefined : option.key}
 									data-note={option.note}
 									aria-pressed={option.key === baseScale ? 'true' : 'false'}
+									disabled={option.disabled}
 								>
 									{option.label}
 								</button>
@@ -328,6 +329,13 @@ const timelineInterval = timelinePercent(5);
 	.serving-control button[aria-pressed='true'] {
 		background: var(--ink);
 		color: var(--paper);
+	}
+
+	.serving-control button:disabled {
+		color: var(--muted);
+		cursor: not-allowed;
+		text-decoration: line-through;
+		text-decoration-thickness: 1px;
 	}
 
 	.serving-control button:focus-visible {

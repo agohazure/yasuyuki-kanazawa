@@ -22,6 +22,7 @@ const kitchen = defineCollection({
 				key: z.string(),
 				label: z.string(),
 				note: z.string(),
+				disabled: z.boolean().optional(),
 			}),
 		),
 		ingredientGroups: z.array(
